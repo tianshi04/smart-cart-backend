@@ -242,6 +242,28 @@ class ProductResponse(BaseModel):
     total: int
     products: list[ProductOut]
 
+
+class BestSellerProductByCategoryOut(BaseModel):
+    """Schema for a best-selling product within a category."""
+    id: UUID
+    name: str
+    price: Decimal
+    total_quantity_sold: int
+    primary_image: ProductImageOut | None
+
+    class Config:
+        from_attributes = True
+
+
+class CategoryWithBestSellersOut(BaseModel):
+    """Schema for a category with its top 2 best-selling products."""
+    id: UUID
+    name: str
+    products: list[BestSellerProductByCategoryOut]
+
+    class Config:
+        from_attributes = True
+
 # --- New Schemas for Notifications ---
 
 class NotificationOut(BaseModel):

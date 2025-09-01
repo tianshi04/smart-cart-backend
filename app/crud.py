@@ -396,6 +396,75 @@ def get_best_selling_products_weekly(session: Session, limit: int = 10) -> list[
         })
     return best_sellers
 
+def get_best_sellers_by_category(session: Session) -> list[schemas.CategoryWithBestSellersOut]:
+    """
+    Retrieves the top 2 best-selling products for each category.
+    """
+    # Define the subquery for ranking products within each category
+    ranked_products_subquery = (
+        select(
+            Product.id.label("product_id"),
+            Category.id.label("category_id"),
+            Category.name.label("category_name"),
+            Product.name.label("product_name"),
+            Product.price.label("product_price"),
+            func.sum(OrderItem.quantity).label("total_quantity_sold"),
+            func.row_number().over(
+                partition_by=Category.id,
+                order_by=func.sum(OrderItem.quantity).desc()
+            ).label("rn")
+        )
+        .join(OrderItem, Product.id == OrderItem.product_id)
+        .join(ProductCategoryLink, Product.id == ProductCategoryLink.product_id)
+        .join(Category, ProductCategoryLink.category_id == Category.id)
+        .group_by(Category.id, Product.id)
+        .cte("ranked_products")
+    )
+
+    # Main query to select the top 2 products from the ranked subquery
+    statement = (
+        select(
+            ranked_products_subquery.c.category_id,
+            ranked_products_subquery.c.category_name,
+            ranked_products_subquery.c.product_id,
+            ranked_products_subquery.c.product_name,
+            ranked_products_subquery.c.product_price,
+            ranked_products_subquery.c.total_quantity_sold
+        )
+        .where(ranked_products_subquery.c.rn <= 2)
+        .order_by(ranked_products_subquery.c.category_name, ranked_products_subquery.c.total_quantity_sold.desc())
+    )
+
+    results = session.exec(statement).all()
+
+    # Process the results into the desired output format
+    category_map = {}
+    for row in results:
+        # Get the primary image for the product
+        primary_image = session.exec(
+            select(ProductImage)
+            .where(ProductImage.product_id == row.product_id, ProductImage.is_primary)
+        ).first()
+
+        product_out = schemas.BestSellerProductByCategoryOut(
+            id=row.product_id,
+            name=row.product_name,
+            price=row.product_price,
+            total_quantity_sold=row.total_quantity_sold,
+            primary_image=primary_image
+        )
+
+        if row.category_id not in category_map:
+            category_map[row.category_id] = schemas.CategoryWithBestSellersOut(
+                id=row.category_id,
+                name=row.category_name,
+                products=[]
+            )
+        
+        category_map[row.category_id].products.append(product_out)
+
+    return list(category_map.values())
+
 # --- Product Image CRUD (New) ---
 
 def create_product_image(session: Session, product_id: UUID, image_in: ProductImageCreate) -> ProductImage:

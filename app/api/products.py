@@ -75,6 +75,21 @@ async def get_best_sellers(
     best_sellers = crud.get_best_selling_products_weekly(session=session, limit=limit)
     return best_sellers
 
+
+@router.get(
+    "/best-sellers-by-category",
+    response_model=list[schemas.CategoryWithBestSellersOut],
+    summary="Get top 2 best-selling products for each category"
+)
+async def get_best_sellers_by_category(
+    session: SessionDep
+) -> list[schemas.CategoryWithBestSellersOut]:
+    """
+    Retrieves the top 2 best-selling products for each category.
+    Requires authentication.
+    """
+    return crud.get_best_sellers_by_category(session=session)
+
 @router.get(
     "/{product_id}/images",
     response_model=schemas.ProductImageListResponse,
