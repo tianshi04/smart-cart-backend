@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Query
 from uuid import UUID
 
 from app import crud, schemas
@@ -8,6 +8,49 @@ router = APIRouter(
     prefix="/products",
     tags=["Products"]
 )
+
+@router.get(
+    "/",
+    response_model=schemas.ProductResponse,
+    summary="Search and filter products"
+)
+async def get_products(
+    session: SessionDep,
+    query: str | None = Query(None, description="Search query for product name and description."),
+    category_id: UUID | None = Query(None, description="Filter by category ID."),
+    min_price: float | None = Query(None, description="Minimum price."),
+    max_price: float | None = Query(None, description="Maximum price."),
+    skip: int = Query(0, ge=0, description="Skip number of products."),
+    limit: int = Query(100, ge=1, le=200, description="Limit number of products."),
+) -> schemas.ProductResponse:
+    """
+    Retrieves a list of products with optional filtering, searching, and pagination.
+    """
+    products_from_db, total_count = crud.get_products(
+        session=session,
+        query=query,
+        category_id=category_id,
+        min_price=min_price,
+        max_price=max_price,
+        skip=skip,
+        limit=limit,
+    )
+
+    products_out = []
+    for product in products_from_db:
+        primary_image = next((img for img in product.images if img.is_primary), None)
+        products_out.append(
+            schemas.ProductOut(
+                id=product.id,
+                name=product.name,
+                description=product.description,
+                price=product.price,
+                categories=product.categories,
+                primary_image=primary_image,
+            )
+        )
+
+    return schemas.ProductResponse(total=total_count, products=products_out)
 
 @router.get(
     "/best-sellers",

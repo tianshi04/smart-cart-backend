@@ -225,6 +225,23 @@ class BestSellerProductOut(BaseModel):
     class Config:
         from_attributes = True
 
+class ProductOut(BaseModel):
+    """Schema for returning a product with its primary image and category."""
+    id: UUID
+    name: str
+    description: str | None
+    price: Decimal
+    categories: list[CategoryOut] = []
+    primary_image: ProductImageOut | None
+
+    class Config:
+        from_attributes = True
+
+class ProductResponse(BaseModel):
+    """Schema for the response of the product list endpoint."""
+    total: int
+    products: list[ProductOut]
+
 # --- New Schemas for Notifications ---
 
 class NotificationOut(BaseModel):

@@ -2,6 +2,7 @@ from uuid import UUID, uuid4
 from datetime import datetime, timedelta
 from typing import Tuple
 
+from sqlalchemy.orm import selectinload
 from sqlmodel import Session, select, func
 
 # Import tất cả các model bạn đã định nghĩa
@@ -9,7 +10,7 @@ from app.models import QRAuthToken
 from app import schemas
 from app.core import security
 from app.models import (
-    User, Product, ProductReview, UserFavoriteLink,
+    User, Product, ProductReview, UserFavoriteLink, ProductCategoryLink,
     Category, Promotion, PromotionProductLink, PromotionCategoryLink,
     OrderItem, ProductImage, Order, Notification, ShoppingSession, ShoppingSessionItem,
     OrderCodeLookup, AIModel
@@ -315,6 +316,49 @@ def remove_category_from_promotion(session: Session, promotion_id: UUID, categor
 def get_product_by_id(session: Session, product_id: UUID) -> Product | None:
     """Retrieves a product by its ID."""
     return session.get(Product, product_id)
+
+
+def get_products(
+    session: Session,
+    query: str | None = None,
+    category_id: UUID | None = None,
+    min_price: float | None = None,
+    max_price: float | None = None,
+    skip: int = 0,
+    limit: int = 100,
+) -> Tuple[list[Product], int]:
+    """
+    Retrieves a list of products with optional filtering and pagination.
+    Returns a tuple containing the list of products and the total count.
+    """
+    statement = select(Product).options(selectinload(Product.images), selectinload(Product.categories))
+    count_statement = select(func.count()).select_from(Product)
+
+    if query:
+        search_filter = func.or_(
+            Product.name.ilike(f"%{query}%"),
+            Product.description.ilike(f"%{query}%")
+        )
+        statement = statement.where(search_filter)
+        count_statement = count_statement.where(search_filter)
+
+    if category_id:
+        statement = statement.join(ProductCategoryLink).where(ProductCategoryLink.category_id == category_id)
+        count_statement = count_statement.join(ProductCategoryLink).where(ProductCategoryLink.category_id == category_id)
+
+    if min_price is not None:
+        statement = statement.where(Product.price >= min_price)
+        count_statement = count_statement.where(Product.price >= min_price)
+
+    if max_price is not None:
+        statement = statement.where(Product.price <= max_price)
+        count_statement = count_statement.where(Product.price <= max_price)
+
+    total_count = session.exec(count_statement).one()
+
+    products = session.exec(statement.offset(skip).limit(limit)).all()
+    return products, total_count
+
 
 def get_best_selling_products_weekly(session: Session, limit: int = 10) -> list[dict]:
     """
