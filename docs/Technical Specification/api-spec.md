@@ -185,13 +185,107 @@ Cung cấp luồng thanh toán tích hợp với cổng thanh toán (PayOS).
 
 Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các tài nguyên khác nhau của hệ thống. Hầu hết đều yêu cầu xác thực JWT của người dùng.
 
-- **`/products`**: Lấy danh sách sản phẩm bán chạy, quản lý hình ảnh sản phẩm.
+- **`/products`**: Tìm kiếm, lọc, lấy danh sách sản phẩm bán chạy, quản lý hình ảnh sản phẩm.
 - **`/categories`**: Quản lý danh mục (CRUD), lấy cấu trúc cây danh mục.
 - **`/reviews`**: Thêm và xem đánh giá sản phẩm.
 - **`/favorites`**: Quản lý danh sách sản phẩm yêu thích của người dùng.
 - **`/promotions`**: Quản lý các chương trình khuyến mãi.
 - **`/orders`**: Xem lịch sử đơn hàng của người dùng đã đăng nhập.
 - **`/notifications`**: Xem danh sách thông báo của người dùng.
+
+---
+
+## 6. Product API (`/products`)
+
+### `GET /products/`
+
+- **Mô tả:** Tìm kiếm và lọc sản phẩm.
+- **Query Params:**
+  - `query` (string, optional): Chuỗi tìm kiếm theo tên và mô tả sản phẩm.
+  - `category_id` (UUID, optional): Lọc sản phẩm theo ID danh mục.
+  - `min_price` (float, optional): Giá tối thiểu.
+  - `max_price` (float, optional): Giá tối đa.
+  - `skip` (int, optional, default: 0): Bỏ qua bao nhiêu sản phẩm đầu tiên (để phân trang).
+  - `limit` (int, optional, default: 100): Giới hạn số lượng sản phẩm trả về.
+- **Success Response (200 OK):**
+
+  ```json
+  {
+    "total": 120,
+    "products": [
+      {
+        "id": "product-uuid",
+        "name": "Tên sản phẩm",
+        "description": "Mô tả sản phẩm",
+        "price": 50.00,
+        "categories": [
+          {
+            "id": "category-uuid",
+            "name": "Tên danh mục",
+            "parent_id": null
+          }
+        ],
+        "primary_image": {
+          "id": "image-uuid",
+          "product_id": "product-uuid",
+          "image_url": "http://example.com/image.png",
+          "is_primary": true
+        }
+      }
+    ]
+  }
+  ```
+
+### `GET /products/best-sellers-by-category`
+
+- **Mô tả:** Lấy danh sách 2 sản phẩm bán chạy nhất cho mỗi danh mục.
+- **Yêu cầu:** Xác thực JWT của người dùng.
+- **Success Response (200 OK):**
+
+  ```json
+  [
+    {
+      "id": "category-uuid-1",
+      "name": "Đồ uống",
+      "products": [
+        {
+          "id": "product-uuid-a",
+          "name": "Coca-Cola",
+          "price": 10.00,
+          "total_quantity_sold": 150,
+          "primary_image": { ... }
+        },
+        {
+          "id": "product-uuid-b",
+          "name": "Pepsi",
+          "price": 10.00,
+          "total_quantity_sold": 120,
+          "primary_image": { ... }
+        }
+      ]
+    },
+    {
+      "id": "category-uuid-2",
+      "name": "Đồ ăn vặt",
+      "products": [
+        {
+          "id": "product-uuid-c",
+          "name": "Oishi Snack",
+          "price": 5.00,
+          "total_quantity_sold": 200,
+          "primary_image": { ... }
+        },
+        {
+          "id": "product-uuid-d",
+          "name": "Lay's Stax",
+          "price": 20.00,
+          "total_quantity_sold": 180,
+          "primary_image": { ... }
+        }
+      ]
+    }
+  ]
+  ```
 
 ---
 
