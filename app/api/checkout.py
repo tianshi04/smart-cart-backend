@@ -130,6 +130,18 @@ async def handle_payment_webhook(request: Request, session: SessionDep):
     
     print("Signature is valid.")
     # --- Kết thúc phần bảo mật ---
+    
+    # --- Nếu là gói test kết nối ---
+    if (
+        payload.get("code") == "00"
+        and payload.get("desc") == "success"
+        and data_object.get("orderCode") == 123
+        and data_object.get("amount") == 3000
+        and data_object.get("description") == "VQRIO123"
+        and data_object.get("accountNumber") == "12345678"
+    ):
+        print("📩 Nhận gói test kết nối từ PayOS.")
+        return {"status": "ok"}
 
     if payload.get("code") != "00":
         return {"status": "ignored", "reason": "Giao dịch chưa thành công."}
