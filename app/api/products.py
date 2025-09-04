@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Query
 from uuid import UUID
 
 from app import crud, schemas
-from app.deps import SessionDep, CurrentUser
+from app.deps import SessionDep
 
 router = APIRouter(
     prefix="/products",
@@ -59,12 +59,10 @@ async def get_products(
 )
 async def get_best_sellers(
     session: SessionDep,
-    current_user: CurrentUser, # Example: requires authentication
     limit: int = 10,
 ) -> list[schemas.BestSellerProductOut]:
     """
     Retrieves a list of the top N best-selling products based on quantity sold in the last 7 days.
-    Requires authentication.
     """
     if limit <= 0:
         raise HTTPException(
@@ -98,11 +96,9 @@ async def get_best_sellers_by_category(
 async def list_product_images(
     product_id: UUID,
     session: SessionDep,
-    current_user: CurrentUser # Example: requires authentication
 ) -> schemas.ProductImageListResponse:
     """
     Retrieves all images associated with a specific product.
-    Requires authentication.
     """
     product = crud.get_product_by_id(session, product_id)
     if not product:
@@ -125,12 +121,10 @@ async def add_product_image(
     product_id: UUID,
     image_in: schemas.ProductImageCreate,
     session: SessionDep,
-    current_user: CurrentUser # Example: requires authentication (e.g., admin role)
 ) -> schemas.ProductImageOut:
     """
     Adds a new image URL to a specified product.
     If `is_primary` is set to true, any existing primary image for that product will be unset.
-    Requires authentication (e.g., admin privileges).
     """
     # Optional: Add role-based access control, e.g., only admins can add images
     # if not current_user.is_admin:
@@ -154,11 +148,9 @@ async def add_product_image(
 async def delete_product_image(
     image_id: UUID,
     session: SessionDep,
-    current_user: CurrentUser # Example: requires authentication (e.g., admin role)
 ):
     """
     Deletes a specific product image by its ID.
-    Requires authentication (e.g., admin privileges).
     """
     # Optional: Add role-based access control, e.g., only admins can delete images
     # if not current_user.is_admin:

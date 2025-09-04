@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from uuid import UUID
 
 from app import crud, schemas
-from app.deps import SessionDep, CurrentUser
+from app.deps import SessionDep
 from app.models import Category # Assuming Category model is defined
 
 router = APIRouter(
@@ -33,11 +33,9 @@ def build_category_tree(
 async def create_new_category(
     category_in: schemas.CategoryCreate,
     session: SessionDep,
-    current_user: CurrentUser # Example: requires authentication
 ) -> schemas.CategoryOut:
     """
     Creates a new product category.
-    Requires authentication.
     """
     # Optional: Add superuser check here if only superusers can create categories
     # if not current_user.is_superuser:
@@ -61,11 +59,9 @@ async def create_new_category(
 )
 async def list_all_categories(
     session: SessionDep,
-    current_user: CurrentUser # Example: requires authentication
 ) -> list[schemas.CategoryOut]:
     """
     Retrieves a flat list of all product categories.
-    Requires authentication.
     """
     categories = crud.get_all_categories(session=session)
     return categories
@@ -77,11 +73,9 @@ async def list_all_categories(
 )
 async def get_category_tree(
     session: SessionDep,
-    current_user: CurrentUser # Example: requires authentication
 ) -> list[schemas.CategoryTreeOut]:
     """
     Retrieves all product categories organized in a hierarchical tree structure.
-    Requires authentication.
     """
     all_categories = crud.get_all_categories(session=session)
     # Sort categories to ensure parents are processed before children (optional, but good for clarity)
@@ -100,11 +94,9 @@ async def get_category_tree(
 async def get_category_details(
     category_id: UUID,
     session: SessionDep,
-    current_user: CurrentUser # Example: requires authentication
 ) -> schemas.CategoryOut:
     """
     Retrieves details of a specific category by its ID.
-    Requires authentication.
     """
     category = crud.get_category_by_id(session=session, category_id=category_id)
     if not category:
@@ -123,11 +115,9 @@ async def update_category_details(
     category_id: UUID,
     category_in: schemas.CategoryUpdate,
     session: SessionDep,
-    current_user: CurrentUser # Example: requires authentication
 ) -> schemas.CategoryOut:
     """
     Updates an existing product category.
-    Requires authentication.
     """
     # Optional: Add superuser check here if only superusers can update categories
     # if not current_user.is_superuser:
@@ -166,11 +156,9 @@ async def update_category_details(
 async def delete_existing_category(
     category_id: UUID,
     session: SessionDep,
-    current_user: CurrentUser # Example: requires authentication
 ):
     """
     Deletes a product category.
-    Requires authentication.
     """
     # Optional: Add superuser check here if only superusers can delete categories
     # if not current_user.is_superuser:

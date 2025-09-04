@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, status
 from uuid import UUID
 
 from app import crud, schemas
-from app.deps import SessionDep, CurrentUser
+from app.deps import SessionDep
 from app.models import Product, Category
 
 router = APIRouter(
@@ -20,11 +20,9 @@ router = APIRouter(
 async def create_new_promotion(
     promotion_in: schemas.PromotionCreate,
     session: SessionDep,
-    current_user: CurrentUser # Example: requires authentication
 ) -> schemas.PromotionOut:
     """
     Creates a new promotion with specified details and optionally links it to products or categories.
-    Requires authentication (e.g., superuser privileges).
     """
     # Optional: Add superuser check here if only superusers can create promotions
     # if not current_user.is_superuser:
@@ -47,12 +45,10 @@ async def create_new_promotion(
 )
 async def list_all_promotions(
     session: SessionDep,
-    current_user: CurrentUser, # Example: requires authentication
     is_active: Optional[bool] = None
 ) -> List[schemas.PromotionOut]:
     """
     Retrieves a list of all promotions, optionally filtered by their active status.
-    Requires authentication.
     """
     promotions = crud.get_all_promotions(session=session, is_active=is_active)
     return promotions
@@ -65,11 +61,9 @@ async def list_all_promotions(
 async def get_promotion_details(
     promotion_id: UUID,
     session: SessionDep,
-    current_user: CurrentUser # Example: requires authentication
 ) -> schemas.PromotionOut:
     """
     Retrieves details of a specific promotion by its ID, including linked products and categories.
-    Requires authentication.
     """
     promotion = crud.get_promotion_by_id(session=session, promotion_id=promotion_id)
     if not promotion:
@@ -88,11 +82,9 @@ async def update_promotion_details(
     promotion_id: UUID,
     promotion_in: schemas.PromotionUpdate,
     session: SessionDep,
-    current_user: CurrentUser # Example: requires authentication
 ) -> schemas.PromotionOut:
     """
     Updates an existing promotion's details and can modify its linked products or categories.
-    Requires authentication (e.g., superuser privileges).
     """
     # Optional: Add superuser check here if only superusers can update promotions
     # if not current_user.is_superuser:
@@ -134,11 +126,9 @@ async def update_promotion_details(
 async def delete_existing_promotion(
     promotion_id: UUID,
     session: SessionDep,
-    current_user: CurrentUser # Example: requires authentication
 ):
     """
     Deletes a promotion.
-    Requires authentication (e.g., superuser privileges).
     """
     # Optional: Add superuser check here if only superusers can delete promotions
     # if not current_user.is_superuser:
@@ -164,11 +154,9 @@ async def link_products_to_promotion(
     promotion_id: UUID,
     product_link_in: schemas.PromotionLinkProductsRequest,
     session: SessionDep,
-    current_user: CurrentUser
 ):
     """
     Links specified products to an existing promotion.
-    Requires authentication.
     """
     promotion = crud.get_promotion_by_id(session, promotion_id)
     if not promotion:
@@ -196,11 +184,9 @@ async def unlink_products_from_promotion(
     promotion_id: UUID,
     product_link_in: schemas.PromotionLinkProductsRequest,
     session: SessionDep,
-    current_user: CurrentUser
 ):
     """
     Unlinks specified products from an existing promotion.
-    Requires authentication.
     """
     promotion = crud.get_promotion_by_id(session, promotion_id)
     if not promotion:
@@ -220,11 +206,9 @@ async def link_categories_to_promotion(
     promotion_id: UUID,
     category_link_in: schemas.PromotionLinkCategoriesRequest,
     session: SessionDep,
-    current_user: CurrentUser
 ):
     """
     Links specified categories to an existing promotion.
-    Requires authentication.
     """
     promotion = crud.get_promotion_by_id(session, promotion_id)
     if not promotion:
@@ -252,11 +236,9 @@ async def unlink_categories_from_promotion(
     promotion_id: UUID,
     category_link_in: schemas.PromotionLinkCategoriesRequest,
     session: SessionDep,
-    current_user: CurrentUser
 ):
     """
     Unlinks specified categories from an existing promotion.
-    Requires authentication.
     """
     promotion = crud.get_promotion_by_id(session, promotion_id)
     if not promotion:
