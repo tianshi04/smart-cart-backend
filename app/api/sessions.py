@@ -100,7 +100,7 @@ async def check_qr_status(
         session_id=qr_auth_token.shopping_session_id # Trả về session_id đã được lưu
     )
     
-@router.put("/{session_id}/items", response_model=schemas.ShoppingSessionOut)
+@router.patch("/sessions/{session_id}/items", response_model=schemas.ShoppingSessionOut)
 async def update_shopping_session_items(
     session_id: UUID,
     session: SessionDep,

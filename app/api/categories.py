@@ -106,7 +106,7 @@ async def get_category_details(
         )
     return category
 
-@router.put(
+@router.patch(
     "/{category_id}",
     response_model=schemas.CategoryOut,
     summary="Update category by ID"

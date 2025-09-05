@@ -73,7 +73,7 @@ async def get_promotion_details(
         )
     return promotion
 
-@router.put(
+@router.patch(
     "/{promotion_id}",
     response_model=schemas.PromotionOut,
     summary="Update promotion by ID"

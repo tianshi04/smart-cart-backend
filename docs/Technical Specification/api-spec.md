@@ -106,7 +106,7 @@ Cung cấp luồng đăng nhập nhanh cho một thiết bị (ví dụ: xe đ�
   }
   ```
 
-### `PUT /sessions/{session_id}/items`
+### `PATCH /categories/{category_id}`
 
 - **Mô tả:** Cập nhật các mặt hàng trong phiên mua sắm của người dùng. Có thể thêm sản phẩm mới, cập nhật số lượng sản phẩm đã có, hoặc xóa sản phẩm (nếu số lượng là 0).
 - **URL Params:** `session_id` (UUID, required).
@@ -280,7 +280,7 @@ Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các
   }
   ```
 
-### `PUT /products/{product_id}`
+### `PATCH /products/{product_id}`
 
 - **Mô tả:** Cập nhật thông tin cơ bản và liên kết danh mục của một sản phẩm hiện có.
 - **URL Params:** `product_id` (UUID, required).

@@ -83,7 +83,7 @@ async def get_product_by_id(
     )
     return product_out
 
-@router.put(
+@router.patch(
     "/{product_id}",
     response_model=schemas.ProductOut,
     summary="Update product details"
