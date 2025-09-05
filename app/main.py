@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlmodel import Session
 
-from app.api import auth, sessions, favorites, reviews, categories, promotions, products,notifications,orders, checkout, debug, models
+from app.api import auth, sessions, favorites, reviews, categories, promotions, products,notifications,orders, checkout, debug, models, vectors
 from app.core.database import engine
 from app.initial_data import seed_initial_data
 
@@ -37,6 +37,7 @@ app.include_router(orders.router)
 app.include_router(checkout.router)
 app.include_router(debug.router) # Thêm router debug
 app.include_router(models.router) # Thêm router cho AI Models
+app.include_router(vectors.router)
 
 @app.get("/", tags=["Root"])
 async def root():

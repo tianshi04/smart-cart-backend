@@ -13,7 +13,7 @@ from app.models import (
     User, Product, ProductReview, UserFavoriteLink, ProductCategoryLink,
     Category, Promotion, PromotionProductLink, PromotionCategoryLink,
     OrderItem, ProductImage, Order, Notification, ShoppingSession, ShoppingSessionItem,
-    OrderCodeLookup, AIModel, AIModelType
+    OrderCodeLookup, AIModel, AIModelType, ProductVector
 )
 from app.schemas import (
     ProductReviewCreate,
@@ -682,6 +682,31 @@ def delete_ai_model(session: Session, db_model: AIModel):
     """Deletes an AI model from the database."""
     session.delete(db_model)
     session.commit()
+
+# --- Product Vector CRUD ---
+
+def create_product_vector(
+    session: Session,
+    product_id: UUID,
+    model_id: UUID,
+    embedding: list[float]
+) -> ProductVector:
+    """
+    Creates a new product vector.
+    """
+    db_vector = ProductVector(
+        product_id=product_id,
+        model_id=model_id,
+        embedding=embedding
+    )
+    session.add(db_vector)
+    session.commit()
+    session.refresh(db_vector)
+    return db_vector
+
+def get_all_product_vectors(session: Session) -> list[ProductVector]:
+    """Retrieves all product vectors from the database."""
+    return session.exec(select(ProductVector)).all()
 
 # --- ShoppingSessionItem CRUD ---
 

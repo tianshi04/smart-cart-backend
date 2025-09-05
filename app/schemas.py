@@ -374,6 +374,23 @@ class AIModelListResponse(BaseModel):
     """Schema for listing multiple AI models."""
     models: list[AIModelOut]
 
+
+# --- Schemas for Product Vectors ---
+
+class ProductVectorDownloadOut(BaseModel):
+    """Schema for an individual vector in the download file."""
+    product_id: UUID
+    model_id: UUID
+    embedding: list[float]
+
+    class Config:
+        from_attributes = True
+
+class ProductVectorListDownloadOut(BaseModel):
+    """Schema for the entire downloadable vector file."""
+    vectors: list[ProductVectorDownloadOut]
+
+
 # --- New Schemas for Shopping Session Items ---
 
 class ShoppingSessionItemIn(BaseModel):

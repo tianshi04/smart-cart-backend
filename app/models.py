@@ -4,6 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
+from sqlalchemy import JSON
 from sqlmodel import Column, DateTime, Field, Relationship, SQLModel, String, Text, func
 
 
@@ -252,6 +253,18 @@ class AIModel(SQLModel, table=True):
     uploaded_at: datetime | None = Field(
         default=None, sa_column=Column(DateTime(timezone=True), server_default=func.now())
     )
+
+class ProductVector(SQLModel, table=True):
+    __tablename__ = "product_vectors"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    product_id: uuid.UUID = Field(foreign_key="products.id", index=True)
+    model_id: uuid.UUID = Field(foreign_key="ai_models.id", index=True)
+
+    embedding: list = Field(sa_column=Column(JSON))
+
+    product: "Product" = Relationship()
+    model: "AIModel" = Relationship()
 
 # --- Promotions & Auth ---
 
