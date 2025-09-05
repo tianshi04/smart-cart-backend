@@ -1,4 +1,5 @@
 import uuid
+import enum
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
@@ -233,11 +234,18 @@ class OrderCodeLookup(SQLModel, table=True):
 
 
 # --- AI Models ---
+class AIModelType(str, enum.Enum):
+    CROP = "CROP"
+    EMBEDDING = "EMBEDDING"
 
 class AIModel(SQLModel, table=True):
     __tablename__ = "ai_models"
 
     id: uuid.UUID | None = Field(default_factory=uuid.uuid4, primary_key=True)
+    model_type: AIModelType = Field(
+        sa_column=Column(String(50), nullable=False, index=True),
+        default=AIModelType.CROP
+    )
     name: str = Field(max_length=255, index=True)
     version: str = Field(max_length=50)
     file_path: str = Field(max_length=512, unique=True) # Path to the stored model file

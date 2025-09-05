@@ -13,7 +13,7 @@ from app.models import (
     User, Product, ProductReview, UserFavoriteLink, ProductCategoryLink,
     Category, Promotion, PromotionProductLink, PromotionCategoryLink,
     OrderItem, ProductImage, Order, Notification, ShoppingSession, ShoppingSessionItem,
-    OrderCodeLookup, AIModel
+    OrderCodeLookup, AIModel, AIModelType
 )
 from app.schemas import (
     ProductReviewCreate,
@@ -653,9 +653,9 @@ def get_any_product(session: Session) -> Product | None:
 
 # --- AIModel CRUD ---
 
-def create_ai_model_metadata(session: Session, name: str, version: str, file_path: str) -> AIModel:
+def create_ai_model_metadata(session: Session, name: str, version: str, file_path: str, model_type: AIModelType) -> AIModel:
     """Creates metadata for a new AI model."""
-    db_model = AIModel(name=name, version=version, file_path=file_path)
+    db_model = AIModel(name=name, version=version, file_path=file_path, model_type=model_type)
     session.add(db_model)
     session.commit()
     session.refresh(db_model)
@@ -665,9 +665,18 @@ def get_ai_model_by_id(session: Session, model_id: UUID) -> AIModel | None:
     """Retrieves an AI model by its ID."""
     return session.get(AIModel, model_id)
 
-def get_all_ai_models(session: Session) -> list[AIModel]:
-    """Retrieves all AI models."""
-    return session.exec(select(AIModel)).all()
+def get_ai_models_by_type(session: Session, model_type: AIModelType) -> list[AIModel]:
+    """Retrieves all AI models of a specific type."""
+    return session.exec(select(AIModel).where(AIModel.model_type == model_type).order_by(AIModel.uploaded_at.desc())).all()
+
+def get_latest_ai_model_by_type(session: Session, model_type: AIModelType) -> AIModel | None:
+    """Retrieves the latest AI model of a specific type."""
+    statement = (
+        select(AIModel)
+        .where(AIModel.model_type == model_type)
+        .order_by(AIModel.uploaded_at.desc())
+    )
+    return session.exec(statement).first()
 
 def delete_ai_model(session: Session, db_model: AIModel):
     """Deletes an AI model from the database."""

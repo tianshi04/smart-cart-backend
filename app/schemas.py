@@ -3,6 +3,8 @@ from uuid import UUID
 from datetime import datetime
 from decimal import Decimal
 
+from app.models import AIModelType
+
 # ----- Auth Schemas ----
 
 class UserCreate(BaseModel):
@@ -354,12 +356,14 @@ class AIModelCreate(BaseModel):
     """Schema for creating a new AI model entry."""
     name: str = Field(..., description="Name of the AI model.")
     version: str = Field(..., description="Version of the AI model.")
+    model_type: AIModelType = Field(..., description="Type of the AI model.")
 
 class AIModelOut(BaseModel):
     """Schema for returning AI model details."""
     id: UUID
     name: str
     version: str
+    model_type: AIModelType
     file_path: str
     uploaded_at: datetime
 
