@@ -37,12 +37,12 @@ Lưu trữ thông tin cơ bản về các sản phẩm.
 
 Lưu trữ nhiều hình ảnh cho một sản phẩm.
 
-| Tên cột     | Kiểu dữ liệu | Khóa | Ghi chú                               |
-| :---------- | :----------- | :--- | :------------------------------------ |
-| `id`        | UUID         | PK   | Khóa chính                            |
-| `product_id`| UUID         | FK   | Liên kết tới `Products.id`            |
-| `image_url` | VARCHAR(255) |      | URL hình ảnh sản phẩm                 |
-| `is_primary`| BOOLEAN      |      | `True` nếu là ảnh đại diện (thumbnail) |
+| Tên cột     | Kiểu dữ liệu | Khóa | Ghi chú                                                              |
+| :---------- | :----------- | :--- | :------------------------------------------------------------------- |
+| `id`        | UUID         | PK   | Khóa chính                                                           |
+| `product_id`| UUID         | FK   | Liên kết tới `Products.id`                                           |
+| `image_url` | VARCHAR(255) |      | Khóa đối tượng (object key) của file trên Cloudflare R2 (ví dụ: `images/products/uuid.jpg`) |
+| `is_primary`| BOOLEAN      |      | `True` nếu là ảnh đại diện (thumbnail)                               |
 
 ---
 
@@ -104,7 +104,7 @@ Lưu trữ thông báo gửi đến người dùng.
 | `title`     | VARCHAR(255) |      | Tiêu đề thông báo        |
 | `message`   | TEXT         |      | Nội dung thông báo       |
 | `is_read`   | BOOLEAN      |      | Trạng thái đã đọc        |
-| `created_at`| TIMESTAMPTZ  |      |                          |
+| `created_at`| TIMESTAMPTZ  |      |                             |
 
 ---
 
@@ -219,14 +219,14 @@ Lưu trữ token dùng cho việc đăng nhập nhanh bằng mã QR.
 
 Lưu trữ metadata của các mô hình AI.
 
-| Tên cột       | Kiểu dữ liệu | Khóa   | Ghi chú                                  |
-| :------------ | :----------- | :----- | :--------------------------------------- |
-| `id`          | UUID         | PK     | Khóa chính                               |
-| `model_type`  | VARCHAR(50)  |        | Loại mô hình (CROP, EMBEDDING)           |
-| `name`        | VARCHAR(255) |        | Tên mô hình AI                           |
-| `version`     | VARCHAR(50)  |        | Phiên bản mô hình                        |
-| `file_path`   | VARCHAR(512) | UNIQUE | Đường dẫn tới tệp mô hình trên server    |
-| `uploaded_at` | TIMESTAMPTZ  |        | Thời gian tải lên                        |
+| Tên cột       | Kiểu dữ liệu | Khóa   | Ghi chú                                                              |
+| :------------ | :----------- | :----- | :------------------------------------------------------------------- |
+| `id`          | UUID         | PK     | Khóa chính                                                           |
+| `model_type`  | VARCHAR(50)  |        | Loại mô hình (CROP, EMBEDDING)                                       |
+| `name`        | VARCHAR(255) |        | Tên mô hình AI                                                       |
+| `version`     | VARCHAR(50)  |        | Phiên bản mô hình                                                    |
+| `file_path`   | VARCHAR(512) | UNIQUE | Khóa đối tượng (object key) của file model trên Cloudflare R2 (ví dụ: `models/crop/uuid.bin`) |
+| `uploaded_at` | TIMESTAMPTZ  |        | Thời gian tải lên                                                    |
 
 ### `Product_Vectors`
 

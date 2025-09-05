@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime
 from decimal import Decimal
+from fastapi import UploadFile # New import
 
 from app.models import AIModelType
 
@@ -200,7 +201,8 @@ class PromotionLinkCategoriesRequest(BaseModel):
 
 class ProductImageCreate(BaseModel):
     """Schema for adding a new product image."""
-    image_url: str = Field(..., description="URL of the product image.")
+    # image_url: str = Field(..., description="URL of the product image.") # Removed
+    file: UploadFile = Field(..., description="The image file to upload.")
     is_primary: bool = Field(False, description="Whether this is the primary image for the product.")
 
 class ProductImageOut(BaseModel):

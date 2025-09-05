@@ -4,6 +4,12 @@
 
 - **Authentication:** Hầu hết các endpoint yêu cầu xác thực đều sử dụng **Bearer Token (JWT)** được gửi qua `Authorization` header. Người dùng lấy token này từ API `POST /auth/login`.
 - **Định dạng dữ liệu:** JSON
+- **Lưu trữ file:** Các file (hình ảnh sản phẩm, model AI) được lưu trữ trên **Cloudflare R2**. Các URL trả về từ API là các URL công khai đầy đủ, sẵn sàng sử dụng.
+  - **Cấu trúc thư mục ảo trên R2:**
+    - Hình ảnh sản phẩm: `images/products/<UUID_duy_nhat>.<phan_mo_rong_file>`
+    - Model AI CROP: `models/crop/<ten_model>-<phien_ban_model>-<UUID_duy_nhat>.<phan_mo_rong_file>`
+    - Model AI EMBEDDING: `models/embedding/<ten_model>-<phien_ban_model>-<UUID_duy_nhat>.<phan_mo_rong_file>`
+  - **Biến môi trường:** `CLOUDFLARE_R2_PUBLIC_URL` được sử dụng để cấu hình phần gốc của URL công khai (ví dụ: `https://pub-xxxxxxxx.r2.dev/` hoặc `https://cdn.yourdomain.com/`).
 
 ---
 
@@ -237,7 +243,7 @@ Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các
         "primary_image": {
           "id": "image-uuid",
           "product_id": "product-uuid",
-          "image_url": "http://example.com/image.png",
+          "image_url": "https://pub-xxxxxxxx.r2.dev/images/products/a1b2c3d4-e5f6-7890-1234-567890abcdef.jpg",
           "is_primary": true
         }
       }
@@ -280,14 +286,24 @@ Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các
           "name": "Coca-Cola",
           "price": 10.00,
           "total_quantity_sold": 150,
-          "primary_image": { ... }
+          "primary_image": {
+            "id": "image-uuid",
+            "product_id": "product-uuid",
+            "image_url": "https://pub-xxxxxxxx.r2.dev/images/products/a1b2c3d4-e5f6-7890-1234-567890abcdef.jpg",
+            "is_primary": true
+          }
         },
         {
           "id": "product-uuid-b",
           "name": "Pepsi",
           "price": 10.00,
           "total_quantity_sold": 120,
-          "primary_image": { ... }
+          "primary_image": {
+            "id": "image-uuid",
+            "product_id": "product-uuid",
+            "image_url": "https://pub-xxxxxxxx.r2.dev/images/products/a1b2c3d4-e5f6-7890-1234-567890abcdef.jpg",
+            "is_primary": true
+          }
         }
       ]
     },
@@ -300,19 +316,54 @@ Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các
           "name": "Oishi Snack",
           "price": 5.00,
           "total_quantity_sold": 200,
-          "primary_image": { ... }
+          "primary_image": {
+            "id": "image-uuid",
+            "product_id": "product-uuid",
+            "image_url": "https://pub-xxxxxxxx.r2.dev/images/products/a1b2c3d4-e5f6-7890-1234-567890abcdef.jpg",
+            "is_primary": true
+          }
         },
         {
           "id": "product-uuid-d",
           "name": "Lay's Stax",
           "price": 20.00,
           "total_quantity_sold": 180,
-          "primary_image": { ... }
+          "primary_image": {
+            "id": "image-uuid",
+            "product_id": "product-uuid",
+            "image_url": "https://pub-xxxxxxxx.r2.dev/images/products/a1b2c3d4-e5f6-7890-1234-567890abcdef.jpg",
+            "is_primary": true
+          }
         }
       ]
     }
   ]
   ```
+
+### `GET /products/{product_id}/images`
+
+- **Mô tả:** Lấy tất cả hình ảnh liên quan đến một sản phẩm cụ thể.
+- **URL Params:** `product_id` (UUID, required).
+- **Success Response (200 OK):**
+
+  ```json
+  {
+    "images": [
+      {
+        "id": "image-uuid",
+        "product_id": "product-uuid",
+        "image_url": "https://pub-xxxxxxxx.r2.dev/images/products/a1b2c3d4-e5f6-7890-1234-567890abcdef.jpg",
+        "is_primary": true
+      }
+    ]
+  }
+  ```
+
+### `DELETE /products/images/{image_id}`
+
+- **Mô tả:** Xóa một hình ảnh sản phẩm cụ thể bằng ID của nó. File cũng sẽ được xóa khỏi Cloudflare R2.
+- **URL Params:** `image_id` (UUID, required).
+- **Success Response (204 No Content):** Không có nội dung trả về.
 
 ---
 
@@ -322,7 +373,7 @@ Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xó
 
 ### `POST /models/crop`
 
-- **Mô tả:** Tải lên một tệp mô hình AI mới thuộc loại CROP và lưu trữ metadata của nó.
+- **Mô tả:** Tải lên một tệp mô hình AI mới thuộc loại CROP lên Cloudflare R2 và lưu trữ metadata của nó.
 - **Request Body:** `multipart/form-data`
   - `name`: Tên của mô hình AI (string)
   - `version`: Phiên bản của mô hình AI (string)
@@ -335,14 +386,14 @@ Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xó
     "name": "string",
     "version": "string",
     "model_type": "CROP",
-    "file_path": "path/to/stored/file",
+    "file_path": "https://pub-xxxxxxxx.r2.dev/models/crop/MyCropModel-1.0-uuid.bin",
     "uploaded_at": "2025-08-30T10:00:00Z"
   }
   ```
 
 ### `POST /models/embedding`
 
-- **Mô tả:** Tải lên một tệp mô hình AI mới thuộc loại EMBEDDING và lưu trữ metadata của nó.
+- **Mô tả:** Tải lên một tệp mô hình AI mới thuộc loại EMBEDDING lên Cloudflare R2 và lưu trữ metadata của nó.
 - **Request Body:** `multipart/form-data`
   - `name`: Tên của mô hình AI (string)
   - `version`: Phiên bản của mô hình AI (string)
@@ -355,7 +406,7 @@ Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xó
     "name": "string",
     "version": "string",
     "model_type": "EMBEDDING",
-    "file_path": "path/to/stored/file",
+    "file_path": "https://pub-xxxxxxxx.r2.dev/models/embedding/MyEmbeddingModel-1.0-uuid.bin",
     "uploaded_at": "2025-08-30T10:00:00Z"
   }
   ```
@@ -371,7 +422,7 @@ Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xó
     "name": "string",
     "version": "string",
     "model_type": "CROP",
-    "file_path": "path/to/stored/file",
+    "file_path": "https://pub-xxxxxxxx.r2.dev/models/crop/MyCropModel-1.0-uuid.bin",
     "uploaded_at": "2025-08-30T10:00:00Z"
   }
   ```
@@ -387,7 +438,7 @@ Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xó
     "name": "string",
     "version": "string",
     "model_type": "EMBEDDING",
-    "file_path": "path/to/stored/file",
+    "file_path": "https://pub-xxxxxxxx.r2.dev/models/embedding/MyEmbeddingModel-1.0-uuid.bin",
     "uploaded_at": "2025-08-30T10:00:00Z"
   }
   ```
@@ -405,7 +456,7 @@ Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xó
         "name": "string",
         "version": "string",
         "model_type": "CROP",
-        "file_path": "path/to/stored/file",
+        "file_path": "https://pub-xxxxxxxx.r2.dev/models/crop/MyCropModel-1.0-uuid.bin",
         "uploaded_at": "2025-08-30T10:00:00Z"
       }
     ]
@@ -425,7 +476,7 @@ Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xó
         "name": "string",
         "version": "string",
         "model_type": "EMBEDDING",
-        "file_path": "path/to/stored/file",
+        "file_path": "https://pub-xxxxxxxx.r2.dev/models/embedding/MyEmbeddingModel-1.0-uuid.bin",
         "uploaded_at": "2025-08-30T10:00:00Z"
       }
     ]
@@ -434,13 +485,13 @@ Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xó
 
 ### `GET /models/{model_id}/download`
 
-- **Mô tả:** Tải xuống một tệp mô hình AI dựa trên ID của nó.
+- **Mô tả:** Tải xuống một tệp mô hình AI dựa trên ID của nó. API sẽ chuyển hướng đến URL công khai của file trên Cloudflare R2.
 - **URL Params:** `model_id` (UUID, required).
-- **Success Response (200 OK):** Trả về tệp mô hình AI dưới dạng `application/octet-stream`.
+- **Success Response (302 Found):** Chuyển hướng đến URL của file trên Cloudflare R2.
 
 ### `DELETE /models/{model_id}`
 
-- **Mô tả:** Xóa một tệp mô hình AI và metadata của nó dựa trên ID.
+- **Mô tả:** Xóa một tệp mô hình AI khỏi Cloudflare R2 và metadata của nó dựa trên ID.
 - **URL Params:** `model_id` (UUID, required).
 - **Success Response (204 No Content):** Không có nội dung trả về.
 

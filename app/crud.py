@@ -21,6 +21,7 @@ from app.schemas import (
     PromotionCreate, PromotionUpdate,
     ProductImageCreate
 )
+from app.services.r2_service import r2_service # New import
 
 
 # --- CRUD Operations cho QRAuthToken ---
@@ -445,6 +446,9 @@ def get_best_sellers_by_category(session: Session) -> list[schemas.CategoryWithB
             select(ProductImage)
             .where(ProductImage.product_id == row.product_id, ProductImage.is_primary)
         ).first()
+
+        if primary_image:
+            primary_image.image_url = r2_service.get_public_url(primary_image.image_url)
 
         product_out = schemas.BestSellerProductByCategoryOut(
             id=row.product_id,

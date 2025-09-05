@@ -1,5 +1,4 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pathlib import Path
 
 
 
@@ -28,8 +27,12 @@ class Settings(BaseSettings):
     PAYOS_API_KEY: str = "your_api_key"
     PAYOS_CHECKSUM_KEY: str = "your_checksum_key"
 
-    # Directory for storing AI models
-    MODELS_DIR: Path = Path("ai_models")
+    # --- Cloudflare R2 Storage ---
+    CLOUDFLARE_R2_ACCOUNT_ID: str = "your_r2_account_id"
+    CLOUDFLARE_R2_ACCESS_KEY_ID: str = "your_r2_access_key_id"
+    CLOUDFLARE_R2_SECRET_ACCESS_KEY: str = "your_r2_secret_access_key"
+    CLOUDFLARE_R2_BUCKET_NAME: str = "your_r2_bucket_name"
+    CLOUDFLARE_R2_PUBLIC_URL: str = "https://pub-<YOUR_ACCOUNT_ID>.r2.dev/<YOUR_BUCKET_NAME>" # Example: https://pub-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.r2.dev/your-bucket-name
 
     # Pydantic settings configuration
     model_config = SettingsConfigDict(

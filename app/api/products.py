@@ -1,8 +1,10 @@
-from fastapi import APIRouter, HTTPException, status, Query
-from uuid import UUID
+from fastapi import APIRouter, HTTPException, status, Query, UploadFile, File, Form
+from uuid import UUID, uuid4
+import mimetypes
 
 from app import crud, schemas
 from app.deps import SessionDep
+from app.services.r2_service import r2_service
 
 router = APIRouter(
     prefix="/products",
@@ -39,6 +41,8 @@ async def get_products(
     products_out = []
     for product in products_from_db:
         primary_image = next((img for img in product.images if img.is_primary), None)
+        if primary_image:
+            primary_image.image_url = r2_service.get_public_url(primary_image.image_url)
         products_out.append(
             schemas.ProductOut(
                 id=product.id,
@@ -108,6 +112,11 @@ async def list_product_images(
         )
     
     images = crud.get_product_images(session=session, product_id=product_id)
+    
+    # Convert image_url to public URL
+    for image in images:
+        image.image_url = r2_service.get_public_url(image.image_url)
+
     return schemas.ProductImageListResponse(images=images)
 
 
@@ -119,25 +128,56 @@ async def list_product_images(
 )
 async def add_product_image(
     product_id: UUID,
-    image_in: schemas.ProductImageCreate,
     session: SessionDep,
+    file: UploadFile = File(...),
+    is_primary: bool = Form(False),
 ) -> schemas.ProductImageOut:
     """
-    Adds a new image URL to a specified product.
+    Adds a new image to a specified product by uploading the file.
     If `is_primary` is set to true, any existing primary image for that product will be unset.
     """
-    # Optional: Add role-based access control, e.g., only admins can add images
-    # if not current_user.is_admin:
-    #     raise HTTPException(status_code=403, detail="Not enough privileges")
-
     product = crud.get_product_by_id(session, product_id)
     if not product:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Product not found."
         )
+
+    # Generate a unique filename for R2
+    file_extension = mimetypes.guess_extension(file.content_type)
+    if not file_extension:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Could not determine file type from content."
+        )
+    unique_filename = f"images/products/{uuid4()}{file_extension}"
+
+    # Read file content
+    file_content = await file.read()
+
+    # Upload to R2
+    uploaded_file_key = r2_service.upload_file(
+        file_content=file_content,
+        file_name=unique_filename,
+        content_type=file.content_type
+    )
+
+    if not uploaded_file_key:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to upload image to storage."
+        )
     
-    new_image = crud.create_product_image(session=session, product_id=product_id, image_in=image_in)
+    # Create ProductImageCreate schema with the R2 object key as image_url
+    image_create_data = schemas.ProductImageCreate(
+        image_url=uploaded_file_key, # Store the R2 object key here
+        is_primary=is_primary
+    )
+
+    new_image = crud.create_product_image(session=session, product_id=product_id, image_in=image_create_data)
+    
+    # Return the ProductImageOut with the public URL
+    new_image.image_url = r2_service.get_public_url(new_image.image_url)
     return new_image
 
 @router.delete(
@@ -163,5 +203,10 @@ async def delete_product_image(
             detail="Product image not found."
         )
     
+    # Delete from R2 first
+    if not r2_service.delete_file(image.image_url):
+        # Log error but proceed with DB deletion to avoid orphaned records
+        print(f"Warning: Failed to delete image {image.image_url} from R2. Proceeding with DB deletion.")
+
     crud.delete_product_image(session=session, image=image)
     return {"message": "Product image deleted successfully."}
