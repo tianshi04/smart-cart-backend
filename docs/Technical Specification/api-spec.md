@@ -44,7 +44,7 @@ Cung cấp chức năng đăng ký và đăng nhập cho người dùng.
 
 - **Mô tả:** Đăng nhập và trả về JWT access token.
 - **Request Body:** Dữ liệu form `x-www-form-urlencoded` với `username` (là email) và `password`.
-- **Success Response (200 OK):**
+- **Success Response (200 OK):}
 
   ```json
   {
@@ -62,7 +62,7 @@ Cung cấp luồng đăng nhập nhanh cho một thiết bị (ví dụ: xe đ�
 ### `POST /sessions/generate-qr`
 
 - **Mô tả:** Tạo ra một token tạm thời để hiển thị dưới dạng QR code trên thiết bị.
-- **Success Response (200 OK):**
+- **Success Response (200 OK):}
 
   ```json
   {
@@ -83,7 +83,7 @@ Cung cấp luồng đăng nhập nhanh cho một thiết bị (ví dụ: xe đ�
   }
   ```
 
-- **Success Response (200 OK):**
+- **Success Response (200 OK):}
 
   ```json
   {
@@ -97,7 +97,7 @@ Cung cấp luồng đăng nhập nhanh cho một thiết bị (ví dụ: xe đ�
 
 - **Mô tả:** Thiết bị (xe đẩy) gọi API này lặp lại để kiểm tra xem mã QR đã được người dùng xác thực hay chưa.
 - **Query Params:** `token` (string, required).
-- **Success Response (200 OK):**
+- **Success Response (200 OK):}
 
   ```json
   {
@@ -123,7 +123,7 @@ Cung cấp luồng đăng nhập nhanh cho một thiết bị (ví dụ: xe đ�
   }
   ```
 
-- **Success Response (200 OK):** Trả về thông tin phiên mua sắm đã cập nhật, bao gồm danh sách các mặt hàng.
+- **Success Response (200 OK):} Trả về thông tin phiên mua sắm đã cập nhật, bao gồm danh sách các mặt hàng.
 
   ```json
   {
@@ -165,7 +165,7 @@ Cung cấp luồng thanh toán tích hợp với cổng thanh toán (PayOS).
   }
   ```
 
-- **Success Response (200 OK):** Trả về ID đơn hàng và URL thanh toán để hiển thị QR.
+- **Success Response (200 OK):} Trả về ID đơn hàng và URL thanh toán để hiển thị QR.
 
   ```json
   {
@@ -178,7 +178,7 @@ Cung cấp luồng thanh toán tích hợp với cổng thanh toán (PayOS).
 
 - **Mô tả:** Client gọi để kiểm tra trạng thái của đơn hàng sau khi người dùng quét mã QR.
 - **URL Params:** `order_id` (UUID, required).
-- **Success Response (200 OK):**
+- **Success Response (200 OK):}
 
   ```json
   {
@@ -192,7 +192,7 @@ Cung cấp luồng thanh toán tích hợp với cổng thanh toán (PayOS).
 - **Mô tả:** Endpoint để nhận thông báo (webhook) từ PayOS khi giao dịch thanh toán có cập nhật.
 - **Actor:** PayOS Server.
 - **Request Body:** Cấu trúc theo quy định của PayOS.
-- **Success Response (200 OK):** `{ "status": "success" }`
+- **Success Response (200 OK):} `{ "status": "success" }`
 
 ---
 
@@ -212,6 +212,121 @@ Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các
 
 ## 6. Product API (`/products`)
 
+### `POST /products/`
+
+- **Mô tả:** Tạo một sản phẩm mới với thông tin cơ bản và liên kết nó với các danh mục.
+- **Request Body:**
+
+  ```json
+  {
+    "name": "Tên sản phẩm mới",
+    "description": "Mô tả chi tiết về sản phẩm.",
+    "price": 99.99,
+    "weight_grams": 500,
+    "category_ids": ["uuid-danh-muc-1", "uuid-danh-muc-2"]
+  }
+  ```
+
+- **Success Response (201 Created):}
+
+  ```json
+  {
+    "id": "uuid-san-pham-moi",
+    "name": "Tên sản phẩm mới",
+    "description": "Mô tả chi tiết về sản phẩm.",
+    "price": 99.99,
+    "weight_grams": 500,
+    "created_at": "2025-09-05T10:00:00Z",
+    "updated_at": "2025-09-05T10:00:00Z",
+    "categories": [
+      {
+        "id": "category-uuid",
+        "name": "Tên danh mục",
+        "parent_id": null
+      }
+    ],
+    "primary_image": null
+  }
+  ```
+
+### `GET /products/{product_id}`
+
+- **Mô tả:** Lấy thông tin chi tiết của một sản phẩm cụ thể bằng ID của nó, bao gồm hình ảnh và danh mục.
+- **URL Params:** `product_id` (UUID, required).
+- **Success Response (200 OK):}
+
+  ```json
+  {
+    "id": "product-uuid",
+    "name": "Tên sản phẩm",
+    "description": "Mô tả sản phẩm",
+    "price": 50.00,
+    "weight_grams": 1000,
+    "created_at": "2025-09-05T10:00:00Z",
+    "updated_at": "2025-09-05T10:00:00Z",
+    "categories": [
+      {
+        "id": "category-uuid",
+        "name": "Tên danh mục",
+        "parent_id": null
+      }
+    ],
+    "primary_image": {
+      "id": "image-uuid",
+      "product_id": "product-uuid",
+      "image_url": "https://pub-xxxxxxxx.r2.dev/images/products/a1b2c3d4-e5f6-7890-1234-567890abcdef.jpg",
+      "is_primary": true
+    }
+  }
+  ```
+
+### `PUT /products/{product_id}`
+
+- **Mô tả:** Cập nhật thông tin cơ bản và liên kết danh mục của một sản phẩm hiện có.
+- **URL Params:** `product_id` (UUID, required).
+- **Request Body:** (Các trường là tùy chọn, chỉ gửi những trường muốn cập nhật)
+
+  ```json
+  {
+    "name": "Tên sản phẩm đã cập nhật",
+    "price": 120.00,
+    "category_ids": ["uuid-danh-muc-moi"]
+  }
+  ```
+
+- **Success Response (200 OK):} Trả về thông tin sản phẩm đã cập nhật.
+
+  ```json
+  {
+    "id": "product-uuid",
+    "name": "Tên sản phẩm đã cập nhật",
+    "description": "Mô tả sản phẩm",
+    "price": 120.00,
+    "weight_grams": 1000,
+    "created_at": "2025-09-05T10:00:00Z",
+    "updated_at": "2025-09-05T10:30:00Z",
+    "categories": [
+      {
+        "id": "category-uuid",
+        "name": "Tên danh mục mới",
+        "parent_id": null
+      }
+    ],
+    "primary_image": {
+      "id": "image-uuid",
+      "product_id": "product-uuid",
+      "image_url": "https://pub-xxxxxxxx.r2.dev/images/products/a1b2c3d4-e5f6-7890-1234-567890abcdef.jpg",
+      "is_primary": true
+    }
+  }
+  ```
+
+### `DELETE /products/{product_id}`
+
+- **Mô tả:** Xóa một sản phẩm và tất cả dữ liệu liên quan của nó (hình ảnh từ R2, đánh giá, yêu thích, v.v.). Không xóa các bản ghi `OrderItem` vì mục đích lịch sử.
+- **URL Params:** `product_id` (UUID, required).
+- **Success Response (204 No Content):} Không có nội dung trả về.
+
 ### `GET /products/`
 
 - **Mô tả:** Tìm kiếm và lọc sản phẩm.
@@ -222,7 +337,7 @@ Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các
   - `max_price` (float, optional): Giá tối đa.
   - `skip` (int, optional, default: 0): Bỏ qua bao nhiêu sản phẩm đầu tiên (để phân trang).
   - `limit` (int, optional, default: 100): Giới hạn số lượng sản phẩm trả về.
-- **Success Response (200 OK):**
+- **Success Response (200 OK):}
 
   ```json
   {
@@ -256,7 +371,7 @@ Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các
 - **Mô tả:** Lấy danh sách các sản phẩm bán chạy nhất theo tuần.
 - **Query Params:**
   - `limit` (int, optional, default: 10): Giới hạn số lượng sản phẩm trả về.
-- **Success Response (200 OK):**
+- **Success Response (200 OK):}
 
   ```json
   [
@@ -273,7 +388,7 @@ Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các
 
 - **Mô tả:** Lấy danh sách 2 sản phẩm bán chạy nhất cho mỗi danh mục.
 - **Yêu cầu:** Xác thực JWT của người dùng.
-- **Success Response (200 OK):**
+- **Success Response (200 OK):}
 
   ```json
   [
@@ -344,7 +459,7 @@ Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các
 
 - **Mô tả:** Lấy tất cả hình ảnh liên quan đến một sản phẩm cụ thể.
 - **URL Params:** `product_id` (UUID, required).
-- **Success Response (200 OK):**
+- **Success Response (200 OK):}
 
   ```json
   {
@@ -359,11 +474,44 @@ Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các
   }
   ```
 
+### `POST /products/{product_id}/images`
+
+- **Mô tả:** Thêm một hình ảnh mới cho sản phẩm bằng cách tải file lên Cloudflare R2. Nếu `is_primary` là `true`, bất kỳ hình ảnh chính hiện có nào của sản phẩm đó sẽ bị gỡ bỏ.
+- **URL Params:** `product_id` (UUID, required).
+- **Request Body:** `multipart/form-data`
+  - `file`: Tệp hình ảnh (binary, required). Hỗ trợ các định dạng ảnh phổ biến.
+  - `is_primary`: Đặt là `true` nếu đây là hình ảnh chính của sản phẩm (boolean, optional, default: `false`).
+- **Success Response (201 Created):}
+
+  ```json
+  {
+    "id": "image-uuid",
+    "product_id": "product-uuid",
+    "image_url": "https://pub-xxxxxxxx.r2.dev/images/products/a1b2c3d4-e5f6-7890-1234-567890abcdef.jpg",
+    "is_primary": true
+  }
+  ```
+
 ### `DELETE /products/images/{image_id}`
 
 - **Mô tả:** Xóa một hình ảnh sản phẩm cụ thể bằng ID của nó. File cũng sẽ được xóa khỏi Cloudflare R2.
 - **URL Params:** `image_id` (UUID, required).
-- **Success Response (204 No Content):** Không có nội dung trả về.
+- **Success Response (204 No Content):} Không có nội dung trả về.
+
+### `PUT /products/images/{image_id}/set-primary`
+
+- **Mô tả:** Đặt một hình ảnh cụ thể làm hình ảnh chính cho sản phẩm của nó. Bất kỳ hình ảnh chính nào khác cho cùng một sản phẩm sẽ bị gỡ bỏ.
+- **URL Params:** `image_id` (UUID, required).
+- **Success Response (200 OK):}
+
+  ```json
+  {
+    "id": "image-uuid",
+    "product_id": "product-uuid",
+    "image_url": "https://pub-xxxxxxxx.r2.dev/images/products/a1b2c3d4-e5f6-7890-1234-567890abcdef.jpg",
+    "is_primary": true
+  }
+  ```
 
 ---
 
@@ -378,7 +526,7 @@ Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xó
   - `name`: Tên của mô hình AI (string)
   - `version`: Phiên bản của mô hình AI (string)
   - `file`: Tệp mô hình AI (binary)
-- **Success Response (200 OK):**
+- **Success Response (200 OK):}
 
   ```json
   {
@@ -398,7 +546,7 @@ Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xó
   - `name`: Tên của mô hình AI (string)
   - `version`: Phiên bản của mô hình AI (string)
   - `file`: Tệp mô hình AI (binary)
-- **Success Response (200 OK):**
+- **Success Response (200 OK):}
 
   ```json
   {
@@ -414,7 +562,7 @@ Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xó
 ### `GET /models/latest/crop`
 
 - **Mô tả:** Lấy thông tin về mô hình CROP mới nhất.
-- **Success Response (200 OK):**
+- **Success Response (200 OK):}
 
   ```json
   {
@@ -430,7 +578,7 @@ Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xó
 ### `GET /models/latest/embedding`
 
 - **Mô tả:** Lấy thông tin về mô hình EMBEDDING mới nhất.
-- **Success Response (200 OK):**
+- **Success Response (200 OK):}
 
   ```json
   {
@@ -446,7 +594,7 @@ Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xó
 ### `GET /models/crop`
 
 - **Mô tả:** Liệt kê tất cả các mô hình AI thuộc loại CROP.
-- **Success Response (200 OK):**
+- **Success Response (200 OK):}
 
   ```json
   {
@@ -466,7 +614,7 @@ Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xó
 ### `GET /models/embedding`
 
 - **Mô tả:** Liệt kê tất cả các mô hình AI thuộc loại EMBEDDING.
-- **Success Response (200 OK):**
+- **Success Response (200 OK):}
 
   ```json
   {
@@ -487,13 +635,13 @@ Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xó
 
 - **Mô tả:** Tải xuống một tệp mô hình AI dựa trên ID của nó. API sẽ chuyển hướng đến URL công khai của file trên Cloudflare R2.
 - **URL Params:** `model_id` (UUID, required).
-- **Success Response (302 Found):** Chuyển hướng đến URL của file trên Cloudflare R2.
+- **Success Response (302 Found):} Chuyển hướng đến URL của file trên Cloudflare R2.
 
 ### `DELETE /models/{model_id}`
 
 - **Mô tả:** Xóa một tệp mô hình AI khỏi Cloudflare R2 và metadata của nó dựa trên ID.
 - **URL Params:** `model_id` (UUID, required).
-- **Success Response (204 No Content):** Không có nội dung trả về.
+- **Success Response (204 No Content):} Không có nội dung trả về.
 
 ---
 
@@ -504,7 +652,7 @@ Cung cấp các chức năng để quản lý và tải xuống các vector sả
 ### `GET /vectors/download`
 
 - **Mô tả:** Tải xuống tất cả các vector sản phẩm từ cơ sở dữ liệu để sử dụng phía client.
-- **Success Response (200 OK):**
+- **Success Response (200 OK):}
 
   ```json
   {
@@ -528,4 +676,4 @@ API chỉ dùng cho mục đích phát triển và kiểm thử.
 
 - **Mô tả:** Chuẩn bị nhanh một giỏ hàng test. API sẽ tự động tìm một phiên mua hàng đang hoạt động của người dùng (hoặc tạo mới), xóa các sản phẩm cũ và thêm một sản phẩm mẫu vào đó.
 - **Yêu cầu:** Xác thực JWT của người dùng.
-- **Success Response (200 OK):** `{ "message": "Giỏ hàng đã sẵn sàng để checkout." }`
+- **Success Response (200 OK):} `{ "message": "Giỏ hàng đã sẵn sàng để checkout." }`

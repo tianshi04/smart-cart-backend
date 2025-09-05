@@ -95,6 +95,30 @@ def register_new_user(session: Session, user_data: schemas.UserCreate):
     session.refresh(user)
     return user
 
+def create_product(session: Session, product_in: schemas.ProductCreate) -> Product:
+    """Creates a new product and links it to specified categories."""
+    product_data = product_in.model_dump(exclude={"category_ids"})
+    db_product = Product(**product_data)
+
+    session.add(db_product)
+    session.commit()
+    session.refresh(db_product)
+
+    # Link categories
+    if product_in.category_ids:
+        for category_id in product_in.category_ids:
+            category = session.get(Category, category_id)
+            if category:
+                db_product.categories.append(category)
+            else:
+                # Log or handle error if category not found
+                print(f"Category with ID {category_id} not found for product {db_product.id}.")
+
+    session.add(db_product)
+    session.commit()
+    session.refresh(db_product)
+    return db_product
+
 # --- Favorites CRUD ---
 def add_product_to_favorites(session: Session, user_id: UUID, product_id: UUID) -> UserFavoriteLink:
     """Adds a product to a user's favorites."""
@@ -318,6 +342,110 @@ def get_product_by_id(session: Session, product_id: UUID) -> Product | None:
     """Retrieves a product by its ID."""
     return session.get(Product, product_id)
 
+def get_product_by_id_with_relations(session: Session, product_id: UUID) -> Product | None:
+    """Retrieves a product by its ID, eagerly loading its images and categories."""
+    statement = select(Product).where(Product.id == product_id).options(
+        selectinload(Product.images),
+        selectinload(Product.categories)
+    )
+    return session.exec(statement).first()
+
+def update_product(session: Session, db_product: Product, product_in: schemas.ProductUpdate) -> Product:
+    """Updates an existing product and its category links."""
+    update_data = product_in.model_dump(exclude_unset=True, exclude={"category_ids"})
+    for field, value in update_data.items():
+        setattr(db_product, field, value)
+
+    # Handle category links
+    if product_in.category_ids is not None:
+        db_product.categories.clear() # Clear existing links
+        for category_id in product_in.category_ids:
+            category = session.get(Category, category_id)
+            if category:
+                db_product.categories.append(category)
+            else:
+                print(f"Category with ID {category_id} not found for product {db_product.id}.")
+
+    session.add(db_product)
+    session.commit()
+    session.refresh(db_product)
+    return db_product
+
+
+def update_product(session: Session, db_product: Product, product_in: schemas.ProductUpdate) -> Product:
+    """Updates an existing product and its category links."""
+    update_data = product_in.model_dump(exclude_unset=True, exclude={"category_ids"})
+    for field, value in update_data.items():
+        setattr(db_product, field, value)
+
+    # Handle category links
+    if product_in.category_ids is not None:
+        db_product.categories.clear() # Clear existing links
+        for category_id in product_in.category_ids:
+            category = session.get(Category, category_id)
+            if category:
+                db_product.categories.append(category)
+            else:
+                print(f"Category with ID {category_id} not found for product {db_product.id}.")
+
+    session.add(db_product)
+    session.commit()
+    session.refresh(db_product)
+    return db_product
+
+def delete_product(session: Session, product_id: UUID):
+    """
+    Deletes a product and all its associated data (images from R2, reviews, favorites, etc.).
+    Does NOT delete OrderItem records for historical purposes.
+    """
+    product = session.get(Product, product_id)
+    if not product:
+        return # Product not found, nothing to delete
+
+    # 1. Delete associated images from R2 and database
+    images = session.exec(select(ProductImage).where(ProductImage.product_id == product_id)).all()
+    for image in images:
+        if not r2_service.delete_file(image.image_url):
+            print(f"Warning: Failed to delete image {image.image_url} from R2 during product deletion.")
+        session.delete(image)
+    
+    # 2. Delete associated reviews
+    reviews = session.exec(select(ProductReview).where(ProductReview.product_id == product_id)).all()
+    for review in reviews:
+        session.delete(review)
+
+    # 3. Delete associated user favorite links
+    favorite_links = session.exec(select(UserFavoriteLink).where(UserFavoriteLink.product_id == product_id)).all()
+    for link in favorite_links:
+        session.delete(link)
+
+    # 4. Delete associated product category links
+    category_links = session.exec(select(ProductCategoryLink).where(ProductCategoryLink.product_id == product_id)).all()
+    for link in category_links:
+        session.delete(link)
+
+    # 5. Delete associated promotion product links
+    promotion_links = session.exec(select(PromotionProductLink).where(PromotionProductLink.product_id == product_id)).all()
+    for link in promotion_links:
+        session.delete(link)
+
+    # 6. Delete associated shopping session items
+    session_items = session.exec(select(ShoppingSessionItem).where(ShoppingSessionItem.product_id == product_id)).all()
+    for item in session_items:
+        session.delete(item)
+
+    # 7. Delete associated product vectors
+    product_vectors = session.exec(select(ProductVector).where(ProductVector.product_id == product_id)).all()
+    for vector in product_vectors:
+        session.delete(vector)
+
+    # Commit all deletions before deleting the product itself
+    session.commit()
+
+    # 8. Delete the product itself
+    session.delete(product)
+    session.commit()
+
 
 def get_products(
     session: Session,
@@ -505,6 +633,37 @@ def delete_product_image(session: Session, image: ProductImage):
     """Deletes a product image."""
     session.delete(image)
     session.commit()
+
+def set_primary_image(session: Session, image_id: UUID) -> ProductImage | None:
+    """
+    Sets a specific image as the primary image for its product.
+    Any other primary images for the same product will be unset.
+    """
+    image_to_set_primary = session.get(ProductImage, image_id)
+    if not image_to_set_primary:
+        return None
+
+    product_id = image_to_set_primary.product_id
+
+    # Unset any existing primary images for this product
+    existing_primary_images = session.exec(
+        select(ProductImage).where(
+            ProductImage.product_id == product_id,
+            ProductImage.is_primary == True
+        )
+    ).all()
+
+    for img in existing_primary_images:
+        if img.id != image_id: # Don't unset the image we are about to set as primary
+            img.is_primary = False
+            session.add(img)
+
+    # Set the target image as primary
+    image_to_set_primary.is_primary = True
+    session.add(image_to_set_primary)
+    session.commit()
+    session.refresh(image_to_set_primary)
+    return image_to_set_primary
 
 # --- Notifications CRUD (New) ---
 

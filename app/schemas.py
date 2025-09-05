@@ -205,6 +205,22 @@ class ProductImageCreate(BaseModel):
     file: UploadFile = Field(..., description="The image file to upload.")
     is_primary: bool = Field(False, description="Whether this is the primary image for the product.")
 
+class ProductCreate(BaseModel):
+    """Schema for creating a new product."""
+    name: str = Field(..., max_length=255)
+    description: str | None = None
+    price: Decimal = Field(..., decimal_places=2, max_digits=10)
+    weight_grams: int
+    category_ids: list[UUID] = Field(default_factory=list, description="List of category IDs to link to the product.")
+
+class ProductUpdate(BaseModel):
+    """Schema for updating an existing product."""
+    name: str | None = Field(None, max_length=255)
+    description: str | None = None
+    price: Decimal | None = Field(None, decimal_places=2, max_digits=10)
+    weight_grams: int | None = None
+    category_ids: list[UUID] | None = Field(None, description="List of category IDs to link to the product (replaces existing).")
+
 class ProductImageOut(BaseModel):
     """Schema for returning product image details."""
     id: UUID
@@ -235,6 +251,9 @@ class ProductOut(BaseModel):
     name: str
     description: str | None
     price: Decimal
+    weight_grams: int # Added
+    created_at: datetime | None # Added
+    updated_at: datetime | None # Added
     categories: list[CategoryOut] = []
     primary_image: ProductImageOut | None
 
