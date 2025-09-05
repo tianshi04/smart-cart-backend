@@ -210,7 +210,7 @@ Lưu trữ token dùng cho việc đăng nhập nhanh bằng mã QR.
 | `user_id`             | UUID         | FK     | Liên kết tới `Users.id` (cập nhật sau khi quét) |
 | `shopping_session_id` | UUID         | FK     | Liên kết tới `Shopping_Sessions.id` (sau khi quét) |
 | `status`              | VARCHAR(50)  |        | `pending`, `authenticated`, `expired`           |
-| `expires_at`          | TIMESTAMPTZ  |        | Thời gian token hết hạn                         |
+| `expires_at`          | TIMESTAMP    |        | Thời gian token hết hạn                         |
 | `created_at`          | TIMESTAMPTZ  |        |                                                 |
 
 ---
@@ -222,7 +222,21 @@ Lưu trữ metadata của các mô hình AI.
 | Tên cột       | Kiểu dữ liệu | Khóa   | Ghi chú                                  |
 | :------------ | :----------- | :----- | :--------------------------------------- |
 | `id`          | UUID         | PK     | Khóa chính                               |
+| `model_type`  | VARCHAR(50)  |        | Loại mô hình (CROP, EMBEDDING)           |
 | `name`        | VARCHAR(255) |        | Tên mô hình AI                           |
 | `version`     | VARCHAR(50)  |        | Phiên bản mô hình                        |
 | `file_path`   | VARCHAR(512) | UNIQUE | Đường dẫn tới tệp mô hình trên server    |
 | `uploaded_at` | TIMESTAMPTZ  |        | Thời gian tải lên                        |
+
+### `Product_Vectors`
+
+**Bảng mới**: Lưu trữ các vector nhúng của sản phẩm, được tạo ra từ các mô hình AI.
+
+| Tên cột     | Kiểu dữ liệu | Khóa | Ghi chú                               |
+| :---------- | :----------- | :--- | :------------------------------------ |
+| `id`        | UUID         | PK   | Khóa chính                            |
+| `product_id`| UUID         | FK   | Liên kết tới `Products.id`            |
+| `model_id`  | UUID         | FK   | Liên kết tới `AI_Models.id`           |
+| `embedding` | JSON         |      | Mảng các số thực biểu diễn vector nhúng |
+
+---

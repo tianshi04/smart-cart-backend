@@ -86,7 +86,7 @@ sequenceDiagram
     SmartCart->>SmartCart: 10. Hiển thị mã QR
     User->>User: 11. Dùng app Ngân hàng trên điện thoại để quét mã
     
-    Note over Server, PaymentGateway: VNPay callback
+    Note over Server, PaymentGateway: PayOS callback
     PaymentGateway-->>Server: 12. Gửi thông báo thanh toán thành công
     Server->>Server: 13. **Tạo Order & Lưu vào Database**
     Server->>Server: 13a. **Tạo thông báo cho người dùng**

@@ -82,7 +82,8 @@ Cung cấp luồng đăng nhập nhanh cho một thiết bị (ví dụ: xe đ�
   ```json
   {
     "status": "authenticated",
-    "user": { ... }
+    "user": { ... },
+    "session_id": "shopping-session-uuid"
   }
   ```
 
@@ -150,6 +151,14 @@ Cung cấp luồng thanh toán tích hợp với cổng thanh toán (PayOS).
 
 - **Mô tả:** Bắt đầu quá trình thanh toán cho giỏ hàng hiện tại của người dùng.
 - **Yêu cầu:** Xác thực JWT của người dùng.
+- **Request Body:**
+
+  ```json
+  {
+    "session_id": "shopping-session-uuid"
+  }
+  ```
+
 - **Success Response (200 OK):** Trả về ID đơn hàng và URL thanh toán để hiển thị QR.
 
   ```json
@@ -236,6 +245,24 @@ Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các
   }
   ```
 
+### `GET /products/best-sellers`
+
+- **Mô tả:** Lấy danh sách các sản phẩm bán chạy nhất theo tuần.
+- **Query Params:**
+  - `limit` (int, optional, default: 10): Giới hạn số lượng sản phẩm trả về.
+- **Success Response (200 OK):**
+
+  ```json
+  [
+    {
+      "id": "product-uuid",
+      "name": "Tên sản phẩm",
+      "price": 10.00,
+      "total_quantity_sold": 150
+    }
+  ]
+  ```
+
 ### `GET /products/best-sellers-by-category`
 
 - **Mô tả:** Lấy danh sách 2 sản phẩm bán chạy nhất cho mỗi danh mục.
@@ -293,9 +320,9 @@ Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các
 
 Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xóa các mô hình AI.
 
-### `POST /models/upload`
+### `POST /models/crop`
 
-- **Mô tả:** Tải lên một tệp mô hình AI mới và lưu trữ metadata của nó.
+- **Mô tả:** Tải lên một tệp mô hình AI mới thuộc loại CROP và lưu trữ metadata của nó.
 - **Request Body:** `multipart/form-data`
   - `name`: Tên của mô hình AI (string)
   - `version`: Phiên bản của mô hình AI (string)
@@ -307,20 +334,67 @@ Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xó
     "id": "model-uuid",
     "name": "string",
     "version": "string",
+    "model_type": "CROP",
     "file_path": "path/to/stored/file",
     "uploaded_at": "2025-08-30T10:00:00Z"
   }
   ```
 
-### `GET /models/{model_id}/download`
+### `POST /models/embedding`
 
-- **Mô tả:** Tải xuống một tệp mô hình AI dựa trên ID của nó.
-- **URL Params:** `model_id` (UUID, required).
-- **Success Response (200 OK):** Trả về tệp mô hình AI dưới dạng `application/octet-stream`.
+- **Mô tả:** Tải lên một tệp mô hình AI mới thuộc loại EMBEDDING và lưu trữ metadata của nó.
+- **Request Body:** `multipart/form-data`
+  - `name`: Tên của mô hình AI (string)
+  - `version`: Phiên bản của mô hình AI (string)
+  - `file`: Tệp mô hình AI (binary)
+- **Success Response (200 OK):**
 
-### `GET /models`
+  ```json
+  {
+    "id": "model-uuid",
+    "name": "string",
+    "version": "string",
+    "model_type": "EMBEDDING",
+    "file_path": "path/to/stored/file",
+    "uploaded_at": "2025-08-30T10:00:00Z"
+  }
+  ```
 
-- **Mô tả:** Liệt kê tất cả các mô hình AI có sẵn và metadata của chúng.
+### `GET /models/latest/crop`
+
+- **Mô tả:** Lấy thông tin về mô hình CROP mới nhất.
+- **Success Response (200 OK):**
+
+  ```json
+  {
+    "id": "model-uuid",
+    "name": "string",
+    "version": "string",
+    "model_type": "CROP",
+    "file_path": "path/to/stored/file",
+    "uploaded_at": "2025-08-30T10:00:00Z"
+  }
+  ```
+
+### `GET /models/latest/embedding`
+
+- **Mô tả:** Lấy thông tin về mô hình EMBEDDING mới nhất.
+- **Success Response (200 OK):**
+
+  ```json
+  {
+    "id": "model-uuid",
+    "name": "string",
+    "version": "string",
+    "model_type": "EMBEDDING",
+    "file_path": "path/to/stored/file",
+    "uploaded_at": "2025-08-30T10:00:00Z"
+  }
+  ```
+
+### `GET /models/crop`
+
+- **Mô tả:** Liệt kê tất cả các mô hình AI thuộc loại CROP.
 - **Success Response (200 OK):**
 
   ```json
@@ -330,6 +404,7 @@ Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xó
         "id": "model-uuid",
         "name": "string",
         "version": "string",
+        "model_type": "CROP",
         "file_path": "path/to/stored/file",
         "uploaded_at": "2025-08-30T10:00:00Z"
       }
@@ -337,11 +412,60 @@ Cung cấp các chức năng để tải lên, tải xuống, liệt kê và xó
   }
   ```
 
+### `GET /models/embedding`
+
+- **Mô tả:** Liệt kê tất cả các mô hình AI thuộc loại EMBEDDING.
+- **Success Response (200 OK):**
+
+  ```json
+  {
+    "models": [
+      {
+        "id": "model-uuid",
+        "name": "string",
+        "version": "string",
+        "model_type": "EMBEDDING",
+        "file_path": "path/to/stored/file",
+        "uploaded_at": "2025-08-30T10:00:00Z"
+      }
+    ]
+  }
+  ```
+
+### `GET /models/{model_id}/download`
+
+- **Mô tả:** Tải xuống một tệp mô hình AI dựa trên ID của nó.
+- **URL Params:** `model_id` (UUID, required).
+- **Success Response (200 OK):** Trả về tệp mô hình AI dưới dạng `application/octet-stream`.
+
 ### `DELETE /models/{model_id}`
 
 - **Mô tả:** Xóa một tệp mô hình AI và metadata của nó dựa trên ID.
 - **URL Params:** `model_id` (UUID, required).
 - **Success Response (204 No Content):** Không có nội dung trả về.
+
+---
+
+## 8. Product Vector API (`/vectors`)
+
+Cung cấp các chức năng để quản lý và tải xuống các vector sản phẩm.
+
+### `GET /vectors/download`
+
+- **Mô tả:** Tải xuống tất cả các vector sản phẩm từ cơ sở dữ liệu để sử dụng phía client.
+- **Success Response (200 OK):**
+
+  ```json
+  {
+    "vectors": [
+      {
+        "product_id": "product-uuid",
+        "model_id": "model-uuid",
+        "embedding": [0.1, 0.2, ..., 0.N]
+      }
+    ]
+  }
+  ```
 
 ---
 
