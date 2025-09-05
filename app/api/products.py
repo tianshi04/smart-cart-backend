@@ -42,6 +42,27 @@ async def create_product(
     return product_out
 
 @router.get(
+    "/best-sellers",
+    response_model=list[schemas.BestSellerProductOut],
+    summary="Get list of best-selling products by week"
+)
+async def get_best_sellers(
+    session: SessionDep,
+    limit: int = 10,
+) -> list[schemas.BestSellerProductOut]:
+    """
+    Retrieves a list of the top N best-selling products based on quantity sold in the last 7 days.
+    """
+    if limit <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Limit must be a positive integer."
+        )
+    
+    best_sellers = crud.get_best_selling_products_weekly(session=session, limit=limit)
+    return best_sellers
+
+@router.get(
     "/{product_id}",
     response_model=schemas.ProductOut,
     summary="Get product by ID"
@@ -184,6 +205,9 @@ async def get_products(
                 name=product.name,
                 description=product.description,
                 price=product.price,
+                weight_grams=product.weight_grams,
+                created_at=product.created_at,
+                updated_at=product.updated_at,
                 categories=product.categories,
                 primary_image=primary_image,
             )
@@ -191,26 +215,6 @@ async def get_products(
 
     return schemas.ProductResponse(total=total_count, products=products_out)
 
-@router.get(
-    "/best-sellers",
-    response_model=list[schemas.BestSellerProductOut],
-    summary="Get list of best-selling products by week"
-)
-async def get_best_sellers(
-    session: SessionDep,
-    limit: int = 10,
-) -> list[schemas.BestSellerProductOut]:
-    """
-    Retrieves a list of the top N best-selling products based on quantity sold in the last 7 days.
-    """
-    if limit <= 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Limit must be a positive integer."
-        )
-    
-    best_sellers = crud.get_best_selling_products_weekly(session=session, limit=limit)
-    return best_sellers
 
 
 @router.get(
