@@ -1,11 +1,12 @@
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, UploadFile, File, HTTPException, status
+from fastapi import APIRouter, UploadFile, File, HTTPException, status, BackgroundTasks
 from fastapi.responses import RedirectResponse # New import
 
 from app import crud, schemas
 from app.deps import SessionDep
 from app.models import AIModelType
+from app.services.ai_service import model_manager
 from app.services.r2_service import r2_service # New import
 import mimetypes # New import
 
@@ -17,6 +18,7 @@ router = APIRouter(
 @router.post("/crop", response_model=schemas.AIModelOut)
 async def upload_crop_model(
     session: SessionDep,
+    background_tasks: BackgroundTasks,
     name: str,
     version: str,
     file: UploadFile = File(...)
@@ -47,12 +49,17 @@ async def upload_crop_model(
         file_path=uploaded_file_key, # Store the R2 object key
         model_type=AIModelType.CROP
     )
+    
+    # Schedule model reloading in the background
+    background_tasks.add_task(model_manager.reload_models)
+
     db_model.file_path = r2_service.get_public_url(db_model.file_path) # Return public URL
     return db_model
 
 @router.post("/embedding", response_model=schemas.AIModelOut)
 async def upload_embedding_model(
     session: SessionDep,
+    background_tasks: BackgroundTasks,
     name: str,
     version: str,
     file: UploadFile = File(...)
@@ -83,6 +90,10 @@ async def upload_embedding_model(
         file_path=uploaded_file_key, # Store the R2 object key
         model_type=AIModelType.EMBEDDING
     )
+
+    # Schedule model reloading in the background
+    background_tasks.add_task(model_manager.reload_models)
+
     db_model.file_path = r2_service.get_public_url(db_model.file_path) # Return public URL
     return db_model
 
