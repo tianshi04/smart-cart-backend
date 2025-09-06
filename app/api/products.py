@@ -4,6 +4,7 @@ import mimetypes
 
 from app import crud, schemas
 from app.deps import SessionDep
+from app.services.ai_service import model_manager
 from app.services.r2_service import r2_service
 
 router = APIRouter(
@@ -263,7 +264,7 @@ async def list_product_images(
     "/{product_id}/images",
     response_model=schemas.ProductImageOut,
     status_code=status.HTTP_201_CREATED,
-    summary="Add a new image to a product"
+    summary="Add an image and generate vectors"
 )
 async def add_product_image(
     product_id: UUID,
@@ -282,19 +283,16 @@ async def add_product_image(
             detail="Product not found."
         )
 
-    # Generate a unique filename for R2
     file_extension = mimetypes.guess_extension(file.content_type)
     if not file_extension:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Could not determine file type from content."
+            detail="Could not determine file type."
         )
     unique_filename = f"images/products/{uuid4()}{file_extension}"
 
-    # Read file content
     file_content = await file.read()
 
-    # Upload to R2
     uploaded_file_key = r2_service.upload_file(
         file_content=file_content,
         file_name=unique_filename,
@@ -307,15 +305,31 @@ async def add_product_image(
             detail="Failed to upload image to storage."
         )
     
-    # Create ProductImageCreate schema with the R2 object key as image_url
+    # Generate vectors from the image
+    vectors, model_id = model_manager.predict(file_content)
+    
+    if model_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="AI model is not ready or failed to provide a model ID."
+        )
+
+    # Create ProductImage record
     image_create_data = schemas.ProductImageCreate(
-        image_url=uploaded_file_key, # Store the R2 object key here
+        image_url=uploaded_file_key,
         is_primary=is_primary
     )
-
     new_image = crud.create_product_image(session=session, product_id=product_id, image_in=image_create_data)
+
+    # Save the generated vectors
+    for vector in vectors:
+        crud.create_product_vector(
+            session=session,
+            product_id=product_id,
+            model_id=model_id,
+            embedding=vector
+        )
     
-    # Return the ProductImageOut with the public URL
     new_image.image_url = r2_service.get_public_url(new_image.image_url)
     return new_image
 

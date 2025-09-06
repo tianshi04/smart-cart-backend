@@ -819,6 +819,18 @@ def get_latest_ai_model_by_type(session: Session, model_type: AIModelType) -> AI
     )
     return session.exec(statement).first()
 
+def get_latest_model(session: Session, model_type: AIModelType | None = None) -> AIModel | None:
+    """
+    Retrieves the latest AI model, optionally filtered by type.
+    """
+    statement = select(AIModel)
+    if model_type:
+        statement = statement.where(AIModel.model_type == model_type)
+    
+    statement = statement.order_by(AIModel.uploaded_at.desc())
+    
+    return session.exec(statement).first()
+
 def delete_ai_model(session: Session, db_model: AIModel):
     """Deletes an AI model from the database."""
     session.delete(db_model)

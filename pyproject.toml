@@ -7,11 +7,14 @@ requires-python = ">=3.12"
 dependencies = [
     "boto3>=1.40.24",
     "fastapi[standard]>=0.116.1",
+    "numpy>=2.3.2",
+    "opencv-python>=4.11.0.86",
     "passlib[bcrypt]>=1.7.4",
     "psycopg[binary]>=3.2.9",
     "pydantic-settings>=2.10.1",
     "pyjwt>=2.10.1",
     "sqlmodel>=0.0.24",
+    "tensorflow>=2.20.0",
 ]
 
 [dependency-groups]

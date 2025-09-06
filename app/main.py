@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlmodel import Session
@@ -5,6 +6,7 @@ from sqlmodel import Session
 from app.api import auth, sessions, favorites, reviews, categories, promotions, products,notifications,orders, checkout, debug, models, vectors
 from app.core.database import engine
 from app.initial_data import seed_initial_data
+from app.services.ai_service import model_manager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -12,7 +14,13 @@ async def lifespan(app: FastAPI):
     # Tạo session và seed dữ liệu
     with Session(engine) as session:
         seed_initial_data(session)
-    print("Startup complete.")
+    
+    # Lên lịch cho việc tải model AI chạy ở chế độ nền
+    # Server sẽ không chờ tác vụ này hoàn thành
+    asyncio.create_task(model_manager.load_models_background())
+
+    print("Startup complete. Server is now online and accepting requests.")
+    print("AI models are being loaded in the background...")
     yield
     # Đây là phần shutdown, nếu muốn thêm logic shutdown thì đặt ở đây
     print("Application shutdown...")
