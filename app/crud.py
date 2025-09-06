@@ -371,28 +371,6 @@ def update_product(session: Session, db_product: Product, product_in: schemas.Pr
     session.refresh(db_product)
     return db_product
 
-
-def update_product(session: Session, db_product: Product, product_in: schemas.ProductUpdate) -> Product:
-    """Updates an existing product and its category links."""
-    update_data = product_in.model_dump(exclude_unset=True, exclude={"category_ids"})
-    for field, value in update_data.items():
-        setattr(db_product, field, value)
-
-    # Handle category links
-    if product_in.category_ids is not None:
-        db_product.categories.clear() # Clear existing links
-        for category_id in product_in.category_ids:
-            category = session.get(Category, category_id)
-            if category:
-                db_product.categories.append(category)
-            else:
-                print(f"Category with ID {category_id} not found for product {db_product.id}.")
-
-    session.add(db_product)
-    session.commit()
-    session.refresh(db_product)
-    return db_product
-
 def delete_product(session: Session, product_id: UUID):
     """
     Deletes a product and all its associated data (images from R2, reviews, favorites, etc.).
@@ -649,7 +627,7 @@ def set_primary_image(session: Session, image_id: UUID) -> ProductImage | None:
     existing_primary_images = session.exec(
         select(ProductImage).where(
             ProductImage.product_id == product_id,
-            ProductImage.is_primary == True
+            ProductImage.is_primary
         )
     ).all()
 
