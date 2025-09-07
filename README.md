@@ -1,104 +1,137 @@
-# Smart Cart Backend API
+# Backend for Phong's E-commerce/Retail Application
 
-## Project Overview
-
-This project provides the backend services for a Smart Cart system, designed to manage products, user interactions, shopping sessions, orders, and integrate with payment gateways. It also includes functionalities for managing AI models.
+This repository contains the backend services for an e-commerce or retail application, built with Python and FastAPI. It provides a robust API for managing products, orders, user authentication, and integrates with various services including AI models for product recommendations/search, payment processing, and cloud storage.
 
 ## Features
 
-- **User Authentication:** Secure user registration and authentication.
-- **QR Code Based Session Management:** Generate and verify QR codes to link users with shopping sessions on smart carts.
-- **Product Catalog:** Manage products with details, images, categories, and reviews.
-- **Shopping Sessions:** Real-time management of items within a user's active shopping session (cart).
-- **Favorites:** Allow users to mark products as favorites.
-- **Promotions:** Create and manage promotions applicable to products and categories.
-- **Order Management:** Handle order creation, status tracking, and history.
-- **Payment Integration:** Webhook handling for payment gateway (PayOS) to finalize orders.
-- **Notifications:** Send notifications to users for events like successful payments.
-- **AI Model Management:**
-  - Upload AI model files with metadata (name, version).
-  - Download stored AI model files.
-  - List all available AI models.
-  - Delete AI model files and their metadata.
+* **User Authentication & Authorization:** Secure user management.
+* **Product Management:** CRUD operations for products, categories, and reviews.
+* **Order Processing:** Checkout flow, order creation, and management.
+* **Shopping Sessions:** Manage user shopping sessions.
+* **AI Integration:** AI models for product vectorization and recommendations.
+* **Promotions & Favorites:** Functionality for promotions and user favorite products.
+* **Notifications:** System for sending notifications.
+* **Database Migrations:** Managed with Alembic.
+* **Cloud Storage Integration:** R2 service integration.
+* **Payment Processing:** Integration with a payment service.
 
-## Technology Stack
+## Technologies Used
 
-- **Backend Framework:** FastAPI (Python)
-- **Database:** PostgreSQL (via SQLModel/SQLAlchemy)
-- **Database Migrations:** Alembic
-- **Payment Gateway:** PayOS
-- **Dependency Management:** uv
+* **Python:** Programming language
+* **FastAPI:** Web framework for building APIs
+* **SQLAlchemy:** ORM for database interactions
+* **Alembic:** Database migration tool
+* **Uvicorn:** ASGI server for running the FastAPI application
+* **uv:** Dependency management (based on `uv.lock`)
 
 ## Setup and Installation
 
-### Prerequisites
+Follow these steps to set up the project locally:
 
-- Python 3.12
-- PostgreSQL database
-- `uv`
+1. **Clone the repository:**
 
-### 1. Clone the repository
+    ```bash
+    git clone https://github.com/your-username/BackendForPhong.git
+    cd BackendForPhong
+    ```
 
-```bash
-git clone <repository_url>
-cd BackendForPhong
-```
+2. **Install `uv` (if not already installed):**
 
-### 2. Set up the Python environment
+    ```bash
+    pip install uv
+    ```
 
-```bash
-uv venv
-uv sync
-```
+3. **Install dependencies:**
 
-### 3. Configure Environment Variables
+    ```bash
+    uv sync
+    ```
 
-Create a `.env` file in the project root based on `.env.example`.
+4. **Environment Variables:**
+    Create a `.env` file in the root directory based on `.env.example`.
 
-```bash
-DATABASE_URL="postgresql://user:password@host:port/dbname"
-SECRET_KEY="your_super_secret_key"
-ACCESS_TOKEN_EXPIRE_MINUTES=10080 # 7 days
+    ```ini
+    # .env.example content (example, adjust as needed)
+    DATABASE_URL="postgresql://user:password@host:5432/dbname"
+    SECRET_KEY="your_super_secret_key_here"
+    ACCESS_TOKEN_EXPIRE_MINUTES=10080 # 7 days
 
-PAYOS_CLIENT_ID="your_payos_client_id"
-PAYOS_API_KEY="your_payos_api_key"
-PAYOS_CHECKSUM_KEY="your_payos_checksum_key"
-```
+    # PayOS Payment Gateway Integration
+    PAYOS_CLIENT_ID="your_payos_client_id"
+    PAYOS_API_KEY="your_payos_api_key"
+    PAYOS_CHECKSUM_KEY="your_payos_checksum_key"
 
-Ensure your `DATABASE_URL` points to your PostgreSQL instance.
+    # Cloudflare R2 Configuration
+    CLOUDFLARE_R2_ACCOUNT_ID=your_r2_account_id
+    CLOUDFLARE_R2_ACCESS_KEY_ID=your_r2_access_key_id
+    CLOUDFLARE_R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
+    CLOUDFLARE_R2_BUCKET_NAME=your_r2_bucket_name
+    CLOUDFLARE_R2_PUBLIC_URL="https://pub-<YOUR_ACCOUNT_ID>.r2.dev/<YOUR_BUCKET_NAME>"
+    ```
 
-### 4. Run Database Migrations
+    **Note:** For production, use strong, randomly generated keys and secure environment management.
 
-Apply the database schema:
+5. **Database Migrations:**
+    Apply database migrations using Alembic:
 
-```bash
-alembic upgrade head
-```
+    ```bash
+    alembic upgrade head
+    ```
 
-### 5. Create AI Models Storage Directory
+## Running the Application
 
-The AI models will be stored in the `ai_models` directory at the project root. Create it if it doesn't exist:
-
-```bash
-mkdir -p ai_models
-```
-
-### 6. Run the Application
+To run the FastAPI application:
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-The API documentation (Swagger UI) will be available at `http://127.0.0.1:8000/docs`.
+The API will be accessible at `http://127.0.0.1:8000`. You can view the interactive API documentation (Swagger UI) at `http://127.0.0.1:8000/docs`.
 
-## API Endpoints
+## Database Migrations (Alembic)
 
-Access the interactive API documentation at `/docs` for detailed information on all available endpoints, request/response schemas, and try-it-out functionality.
+* **Generate a new migration:**
+
+    ```bash
+    alembic revision --autogenerate -m "Description of your migration"
+    ```
+
+* **Apply migrations:**
+
+    ```bash
+    alembic upgrade head
+    ```
+
+* **Revert last migration:**
+
+    ```bash
+    alembic downgrade -1
+    ```
+
+## API Endpoints (Overview)
+
+The API provides endpoints for:
+
+* `/auth/`: User authentication (login, register, token management)
+* `/categories/`: Category management
+* `/checkout/`: Checkout process
+* `/debug/`: Debugging endpoints (if enabled)
+* `/favorites/`: User favorite products
+* `/models/`: AI model related operations
+* `/notifications/`: User notifications
+* `/orders/`: Order management
+* `/products/`: Product management
+* `/promotions/`: Promotion management
+* `/reviews/`: Product reviews
+* `/sessions/`: Shopping session management
+* `/vectors/`: Product vector related operations
+
+Refer to the interactive API documentation (`/docs`) for detailed endpoint specifications.
 
 ## Contributing
 
-Contributions are welcome! Please follow the standard GitHub flow: fork the repository, create a feature branch, make your changes, and submit a pull request.
+Contributions are welcome! Please follow the standard GitHub flow: fork the repository, create a new branch for your features or bug fixes, and submit a pull request.
 
 ## License
 
-[Specify your license here, e.g., MIT, Apache 2.0]
+[Specify your license here, e.g., MIT License]

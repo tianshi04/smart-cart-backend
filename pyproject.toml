@@ -7,10 +7,11 @@ requires-python = ">=3.12"
 dependencies = [
     "boto3>=1.40.24",
     "fastapi[standard]>=0.116.1",
+    "httpx>=0.28.1",
     "numpy>=2.3.2",
     "opencv-python>=4.11.0.86",
     "passlib[bcrypt]>=1.7.4",
-    "psycopg[binary]>=3.2.9",
+    "psycopg2-binary>=2.9.10",
     "pydantic-settings>=2.10.1",
     "pyjwt>=2.10.1",
     "sqlmodel>=0.0.24",
@@ -20,6 +21,5 @@ dependencies = [
 [dependency-groups]
 dev = [
     "alembic>=1.16.4",
-    "httpx>=0.28.1",
-    "psycopg2-binary>=2.9.10",
+    "deptry>=0.23.1",
 ]
