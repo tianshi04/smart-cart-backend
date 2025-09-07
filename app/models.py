@@ -260,11 +260,16 @@ class ProductVector(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     product_id: uuid.UUID = Field(foreign_key="products.id", index=True)
     model_id: uuid.UUID = Field(foreign_key="ai_models.id", index=True)
+    image_id: uuid.UUID | None = Field(default=None, foreign_key="product_images.id", index=True)
 
     embedding: list = Field(sa_column=Column(JSON))
+    created_at: datetime | None = Field(
+        default=None, sa_column=Column(DateTime(timezone=True), server_default=func.now())
+    )
 
     product: "Product" = Relationship()
     model: "AIModel" = Relationship()
+    image: Optional["ProductImage"] = Relationship()
 
 # --- Promotions & Auth ---
 

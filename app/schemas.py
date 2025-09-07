@@ -394,20 +394,10 @@ class AIModelListResponse(BaseModel):
     models: list[AIModelOut]
 
 
-# --- Schemas for Product Vectors ---
-
-class ProductVectorDownloadOut(BaseModel):
-    """Schema for an individual vector in the download file."""
-    product_id: UUID
-    model_id: UUID
-    embedding: list[float]
-
-    class Config:
-        from_attributes = True
-
-class ProductVectorListDownloadOut(BaseModel):
-    """Schema for the entire downloadable vector file."""
-    vectors: list[ProductVectorDownloadOut]
+# --- Schema for get lastest updated time of product vector table --
+class LastUpdatedOut(BaseModel):
+    """Schema for returning the last updated timestamp."""
+    last_updated: datetime | None
 
 
 # --- New Schemas for Shopping Session Items ---

@@ -237,6 +237,8 @@ Lưu trữ metadata của các mô hình AI.
 | `id`        | UUID         | PK   | Khóa chính                            |
 | `product_id`| UUID         | FK   | Liên kết tới `Products.id`            |
 | `model_id`  | UUID         | FK   | Liên kết tới `AI_Models.id`           |
+| `image_id`  | UUID         | FK   | Liên kết tới `Product_Images.id`      |
 | `embedding` | JSON         |      | Mảng các số thực biểu diễn vector nhúng |
+| `created_at`| TIMESTAMPTZ  |      | Thời gian tạo                         |
 
 ---

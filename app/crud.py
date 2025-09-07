@@ -842,7 +842,8 @@ def create_product_vector(
     session: Session,
     product_id: UUID,
     model_id: UUID,
-    embedding: list[float]
+    embedding: list[float],
+    image_id: UUID | None = None # New parameter
 ) -> ProductVector:
     """
     Creates a new product vector.
@@ -850,7 +851,8 @@ def create_product_vector(
     db_vector = ProductVector(
         product_id=product_id,
         model_id=model_id,
-        embedding=embedding
+        embedding=embedding,
+        image_id=image_id # New field
     )
     session.add(db_vector)
     session.commit()
@@ -860,6 +862,29 @@ def create_product_vector(
 def get_all_product_vectors(session: Session) -> list[ProductVector]:
     """Retrieves all product vectors from the database."""
     return session.exec(select(ProductVector)).all()
+
+
+def get_latest_vector_timestamp(session: Session) -> datetime | None:
+    """Retrieves the creation timestamp of the most recent product vector."""
+    statement = select(ProductVector).order_by(ProductVector.created_at.desc()).limit(1)
+    latest_vector = session.exec(statement).first()
+    return latest_vector.created_at if latest_vector else None
+
+
+def delete_vectors_by_image_id(session: Session, image_id: UUID) -> int:
+    """Deletes all vectors associated with a specific image_id and returns the count."""
+    statement = select(ProductVector).where(ProductVector.image_id == image_id)
+    vectors_to_delete = session.exec(statement).all()
+    
+    if not vectors_to_delete:
+        return 0
+        
+    count = len(vectors_to_delete)
+    for vector in vectors_to_delete:
+        session.delete(vector)
+    
+    session.commit()
+    return count
 
 # --- ShoppingSessionItem CRUD ---
 

@@ -327,7 +327,8 @@ async def add_product_image(
             session=session,
             product_id=product_id,
             model_id=model_id,
-            embedding=vector
+            embedding=vector,
+            image_id=new_image.id
         )
     
     new_image.image_url = r2_service.get_public_url(new_image.image_url)
@@ -356,7 +357,10 @@ async def delete_product_image(
             detail="Product image not found."
         )
     
-    # Delete from R2 first
+    # Delete associated vectors first
+    crud.delete_vectors_by_image_id(session=session, image_id=image_id)
+
+    # Then, delete from R2
     if not r2_service.delete_file(image.image_url):
         # Log error but proceed with DB deletion to avoid orphaned records
         print(f"Warning: Failed to delete image {image.image_url} from R2. Proceeding with DB deletion.")

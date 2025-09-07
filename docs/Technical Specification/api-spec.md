@@ -651,18 +651,30 @@ Cung cấp các chức năng để quản lý và tải xuống các vector sả
 
 ### `GET /vectors/download`
 
-- **Mô tả:** Tải xuống tất cả các vector sản phẩm từ cơ sở dữ liệu để sử dụng phía client.
-- **Success Response (200 OK):}
+- **Mô tả:** Tải xuống tất cả các vector sản phẩm từ cơ sở dữ liệu dưới dạng một file JSON. File này chỉ chứa `product_id` và `embedding` của mỗi vector.
+- **Success Response (200 OK):} (File tải xuống: `product_vectors.json`)
 
   ```json
   {
     "vectors": [
       {
         "product_id": "product-uuid",
-        "model_id": "model-uuid",
         "embedding": [0.1, 0.2, ..., 0.N]
       }
     ]
+  }
+  ```
+
+---
+
+### `GET /vectors/last-updated`
+
+- **Mô tả:** Lấy thời gian tạo của vector sản phẩm mới nhất. Client có thể dùng endpoint này để kiểm tra xem có dữ liệu vector mới cần tải xuống hay không.
+- **Success Response (200 OK):}
+
+  ```json
+  {
+    "last_updated": "2025-09-06T14:30:00.123Z"
   }
   ```
 
@@ -677,3 +689,4 @@ API chỉ dùng cho mục đích phát triển và kiểm thử.
 - **Mô tả:** Chuẩn bị nhanh một giỏ hàng test. API sẽ tự động tìm một phiên mua hàng đang hoạt động của người dùng (hoặc tạo mới), xóa các sản phẩm cũ và thêm một sản phẩm mẫu vào đó.
 - **Yêu cầu:** Xác thực JWT của người dùng.
 - **Success Response (200 OK):} `{ "message": "Giỏ hàng đã sẵn sàng để checkout." }`
+esponse (200 OK):} `{ "message": "Giỏ hàng đã sẵn sàng để checkout." }`
