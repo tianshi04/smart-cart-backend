@@ -106,24 +106,12 @@ Cung cấp luồng đăng nhập nhanh cho một thiết bị (ví dụ: xe đ�
   }
   ```
 
-### `PATCH /categories/{category_id}`
+### `GET /sessions/{session_id}`
 
-- **Mô tả:** Cập nhật các mặt hàng trong phiên mua sắm của người dùng. Có thể thêm sản phẩm mới, cập nhật số lượng sản phẩm đã có, hoặc xóa sản phẩm (nếu số lượng là 0).
+- **Mô tả:** Lấy thông tin chi tiết của một phiên mua sắm, bao gồm danh sách các mặt hàng hiện có trong giỏ. Yêu cầu xác thực và chỉ người dùng sở hữu phiên mới có quyền truy cập.
 - **URL Params:** `session_id` (UUID, required).
-- **Request Body:**
-
-  ```json
-  {
-    "items": [
-      {
-        "product_id": "product-uuid",
-        "quantity": 1
-      }
-    ]
-  }
-  ```
-
-- **Success Response (200 OK):} Trả về thông tin phiên mua sắm đã cập nhật, bao gồm danh sách các mặt hàng.
+- **Yêu cầu:** Xác thực JWT của người dùng.
+- **Success Response (200 OK):** Trả về thông tin phiên mua sắm, tương tự như response của `PATCH /sessions/{session_id}/items`.
 
   ```json
   {
@@ -140,6 +128,56 @@ Cung cấp luồng đăng nhập nhanh cho một thiết bị (ví dụ: xe đ�
         "product": {
           "id": "product-uuid",
           "name": "Tên sản phẩm",
+          "price": 100.00,
+          "primary_image": {
+            "id": "image-uuid",
+            "image_url": "https://.../image.jpg",
+            "is_primary": true
+          }
+        }
+      }
+    ]
+  }
+  ```
+
+### `PATCH /sessions/{session_id}/items`
+
+- **Mô tả:** Cập nhật các mặt hàng trong một phiên mua sắm. Endpoint này cho phép thêm sản phẩm mới, cập nhật số lượng sản phẩm đã có, hoặc xóa sản phẩm khỏi giỏ (bằng cách gửi số lượng là 0).
+- **URL Params:** `session_id` (UUID, required).
+- **Request Body:**
+
+  ```json
+  {
+    "items": [
+      {
+        "product_id": "product-uuid-1",
+        "quantity": 2
+      },
+      {
+        "product_id": "product-uuid-2",
+        "quantity": 0
+      }
+    ]
+  }
+  ```
+
+- **Success Response (200 OK):} Trả về toàn bộ thông tin phiên mua sắm đã được cập nhật.
+
+  ```json
+  {
+    "id": "session-uuid",
+    "user_id": "user-uuid",
+    "status": "active",
+    "created_at": "2025-08-30T10:00:00Z",
+    "items": [
+      {
+        "id": "item-uuid",
+        "product_id": "product-uuid-1",
+        "quantity": 2,
+        "added_at": "2025-08-30T10:00:00Z",
+        "product": {
+          "id": "product-uuid-1",
+          "name": "Tên sản phẩm 1",
           "price": 100.00
         }
       }

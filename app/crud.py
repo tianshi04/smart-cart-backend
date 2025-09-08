@@ -939,3 +939,20 @@ def get_shopping_session_with_items(session: Session, session_id: UUID) -> Shopp
     
     shopping_session = session.exec(statement).first()
     return shopping_session
+
+
+def get_session_with_details_by_id(session: Session, session_id: UUID) -> ShoppingSession | None:
+    """
+    Retrieves a shopping session by its ID, eagerly loading its items,
+    the associated product for each item, and the product's primary image.
+    """
+    statement = (
+        select(ShoppingSession)
+        .where(ShoppingSession.id == session_id)
+        .options(
+            selectinload(ShoppingSession.items)
+            .selectinload(ShoppingSessionItem.product)
+            .selectinload(Product.images)
+        )
+    )
+    return session.exec(statement).first()

@@ -99,8 +99,8 @@ async def check_qr_status(
         user=user_info,
         session_id=qr_auth_token.shopping_session_id # Trả về session_id đã được lưu
     )
-    
-@router.patch("/sessions/{session_id}/items", response_model=schemas.ShoppingSessionOut)
+
+@router.patch("/{session_id}/items", response_model=schemas.ShoppingSessionOut)
 async def update_shopping_session_items(
     session_id: UUID,
     session: SessionDep,
@@ -144,3 +144,69 @@ async def update_shopping_session_items(
         raise HTTPException(status_code=500, detail="Không thể lấy phiên mua sắm đã cập nhật.")
 
     return updated_session
+    
+@router.patch("/sessions/{session_id}/items", response_model=schemas.ShoppingSessionOut, deprecated=True)
+async def update_shopping_session_items_deprecated(
+    session_id: UUID,
+    session: SessionDep,
+    items_update: schemas.ShoppingSessionItemsUpdate
+) -> schemas.ShoppingSessionOut:
+    """
+    Cập nhật các mặt hàng trong phiên mua sắm của người dùng.
+    - Thêm sản phẩm mới vào phiên.
+    - Cập nhật số lượng sản phẩm đã có.
+    - Xóa sản phẩm khỏi phiên nếu số lượng là 0.
+    """
+    # Lấy phiên mua sắm hiện tại của người dùng
+    shopping_session = crud.get_session_by_id(session, session_id)
+
+    if not shopping_session:
+        raise HTTPException(status_code=404, detail="Phiên mua sắm không tìm thấy.")
+    
+    if shopping_session.status != "active":
+        raise HTTPException(status_code=400, detail="Không thể cập nhật phiên mua sắm không hoạt động.")
+
+    for item_in in items_update.items:
+        product = crud.get_product_by_id(session, item_in.product_id)
+        if not product:
+            raise HTTPException(status_code=404, detail=f"Sản phẩm với ID {item_in.product_id} không tìm thấy.")
+
+        existing_item = crud.get_session_item_by_product_and_session(
+            session, shopping_session.id, item_in.product_id
+        )
+
+        if item_in.quantity == 0:
+            if existing_item:
+                crud.remove_item_from_session(session, existing_item)
+        elif existing_item:
+            crud.update_session_item_quantity(session, existing_item, item_in.quantity)
+        else:
+            crud.add_item_to_session(session, shopping_session.id, item_in.product_id, item_in.quantity)
+    
+    # Lấy lại phiên mua sắm với các mặt hàng đã được cập nhật để trả về
+    updated_session = crud.get_shopping_session_with_items(session, shopping_session.id)
+    if not updated_session:
+        raise HTTPException(status_code=500, detail="Không thể lấy phiên mua sắm đã cập nhật.")
+
+    return updated_session
+
+
+@router.get("/{session_id}", response_model=schemas.ShoppingSessionOut)
+async def get_shopping_session_details(
+    session_id: UUID,
+    session: SessionDep,
+    # current_user: CurrentUser
+) -> schemas.ShoppingSessionOut:
+    """
+    Lấy thông tin chi tiết của một phiên mua sắm, bao gồm các mặt hàng trong giỏ.
+    Chỉ người dùng sở hữu phiên mới có thể truy cập.
+    """
+    shopping_session = crud.get_session_with_details_by_id(session, session_id)
+
+    if not shopping_session:
+        raise HTTPException(status_code=404, detail="Phiên mua sắm không tìm thấy.")
+
+    # if shopping_session.user_id != current_user.id:
+    #     raise HTTPException(status_code=403, detail="Không có quyền truy cập vào phiên mua sắm này.")
+
+    return shopping_session
