@@ -308,3 +308,21 @@ class QRAuthToken(SQLModel, table=True):
 
     user: Optional[User] = Relationship(back_populates="qr_auth_tokens")
     shopping_session: Optional[ShoppingSession] = Relationship(back_populates="qr_auth_token")
+
+
+# --- Marketing & Content ---
+
+class Banner(SQLModel, table=True):
+    __tablename__ = "banners"
+
+    id: uuid.UUID | None = Field(default_factory=uuid.uuid4, primary_key=True)
+    title: str = Field(max_length=255)
+    image_url: str = Field(max_length=512)  # Path to the stored image file in R2
+    target_url: str | None = Field(default=None, max_length=512) # Optional URL to link to
+    is_active: bool = Field(default=True, index=True)
+    created_at: datetime | None = Field(
+        default=None, sa_column=Column(DateTime(timezone=True), server_default=func.now())
+    )
+    updated_at: datetime | None = Field(
+        default=None, sa_column=Column(DateTime(timezone=True), onupdate=func.now())
+    )

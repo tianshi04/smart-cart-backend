@@ -13,13 +13,14 @@ from app.models import (
     User, Product, ProductReview, UserFavoriteLink, ProductCategoryLink,
     Category, Promotion, PromotionProductLink, PromotionCategoryLink,
     OrderItem, ProductImage, Order, Notification, ShoppingSession, ShoppingSessionItem,
-    OrderCodeLookup, AIModel, AIModelType, ProductVector
+    OrderCodeLookup, AIModel, AIModelType, ProductVector, Banner
 )
 from app.schemas import (
     ProductReviewCreate,
     CategoryCreate, CategoryUpdate,
     PromotionCreate, PromotionUpdate,
-    ProductImageCreate
+    ProductImageCreate,
+    BannerCreate, BannerUpdate
 )
 from app.services.r2_service import r2_service # New import
 
@@ -956,3 +957,55 @@ def get_session_with_details_by_id(session: Session, session_id: UUID) -> Shoppi
         )
     )
     return session.exec(statement).first()
+
+
+# --- Banner CRUD ---
+
+def create_banner(session: Session, banner_in: BannerCreate, image_url: str) -> Banner:
+    """Creates a new banner."""
+    db_banner = Banner(
+        title=banner_in.title,
+        image_url=image_url,
+        target_url=banner_in.target_url,
+        is_active=banner_in.is_active
+    )
+    session.add(db_banner)
+    session.commit()
+    session.refresh(db_banner)
+    return db_banner
+
+def get_banner_by_id(session: Session, banner_id: UUID) -> Banner | None:
+    """Retrieves a banner by its ID."""
+    return session.get(Banner, banner_id)
+
+def get_all_banners(session: Session) -> list[Banner]:
+    """Retrieves all banners."""
+    return session.exec(select(Banner).order_by(Banner.created_at.desc())).all()
+
+def get_active_banners(session: Session) -> list[Banner]:
+    """Retrieves all active banners."""
+    return session.exec(select(Banner).where(Banner.is_active).order_by(Banner.created_at.desc())).all()
+
+def update_banner(session: Session, db_banner: Banner, banner_in: BannerUpdate) -> Banner:
+    """Updates an existing banner."""
+    update_data = banner_in.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_banner, field, value)
+    session.add(db_banner)
+    session.commit()
+    session.refresh(db_banner)
+    return db_banner
+
+def delete_banner(session: Session, banner_id: UUID):
+    """Deletes a banner from the database and its image from R2 storage."""
+    banner = session.get(Banner, banner_id)
+    if not banner:
+        return # Banner not found
+
+    # Delete from R2 first
+    if not r2_service.delete_file(banner.image_url):
+        print(f"Warning: Failed to delete banner image {banner.image_url} from R2.")
+
+    # Then delete from DB
+    session.delete(banner)
+    session.commit()

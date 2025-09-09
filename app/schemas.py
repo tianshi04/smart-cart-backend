@@ -440,3 +440,34 @@ class ShoppingSessionOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# --- Banner Schemas ---
+
+class BannerOut(BaseModel):
+    """Schema for returning banner details."""
+    id: UUID
+    title: str
+    image_url: str
+    target_url: str | None
+    is_active: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class BannerCreate(BaseModel):
+    """Schema for creating a new banner."""
+    title: str = Field(..., description="Title of the banner.")
+    target_url: str | None = Field(None, description="URL the banner links to.")
+    is_active: bool = Field(True, description="Whether the banner is active.")
+
+class BannerUpdate(BaseModel):
+    """Schema for updating an existing banner."""
+    title: str | None = Field(None, description="New title for the banner.")
+    target_url: str | None = Field(None, description="New URL the banner links to.")
+    is_active: bool | None = Field(None, description="Set the banner to active or inactive.")
+
+class BannerListResponse(BaseModel):
+    """Schema for listing multiple banners."""
+    banners: list[BannerOut]

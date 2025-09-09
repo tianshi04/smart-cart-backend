@@ -728,3 +728,94 @@ API chỉ dùng cho mục đích phát triển và kiểm thử.
 - **Yêu cầu:** Xác thực JWT của người dùng.
 - **Success Response (200 OK):} `{ "message": "Giỏ hàng đã sẵn sàng để checkout." }`
 esponse (200 OK):} `{ "message": "Giỏ hàng đã sẵn sàng để checkout." }`
+
+---
+
+## 9. Banner API (`/banners`)
+
+Cung cấp các chức năng để quản lý banner quảng cáo.
+
+### `POST /banners/upload`
+
+- **Mô tả:** Tải lên một banner mới. Yêu cầu quyền admin.
+- **Request Body:** `multipart/form-data`
+  - `title`: Tiêu đề của banner (string, required).
+  - `target_url`: URL mà banner sẽ trỏ đến khi được nhấp vào (string, optional).
+  - `is_active`: Trạng thái của banner (boolean, optional, default: `true`).
+  - `file`: Tệp hình ảnh (binary, required).
+- **Success Response (201 Created):**
+
+  ```json
+  {
+    "id": "banner-uuid",
+    "title": "Tiêu đề banner",
+    "image_url": "https://pub-xxxxxxxx.r2.dev/images/banners/a1b2c3d4-e5f6-7890-1234-567890abcdef.jpg",
+    "target_url": "https://example.com/promotion",
+    "is_active": true,
+    "created_at": "2025-09-07T10:00:00Z"
+  }
+  ```
+
+### `GET /banners/active`
+
+- **Mô tả:** Lấy danh sách tất cả các banner đang hoạt động.
+- **Success Response (200 OK):**
+
+  ```json
+  {
+    "banners": [
+      {
+        "id": "banner-uuid",
+        "title": "Tiêu đề banner",
+        "image_url": "https://pub-xxxxxxxx.r2.dev/images/banners/a1b2c3d4-e5f6-7890-1234-567890abcdef.jpg",
+        "target_url": "https://example.com/promotion",
+        "is_active": true,
+        "created_at": "2025-09-07T10:00:00Z"
+      }
+    ]
+  }
+  ```
+
+### `GET /banners/`
+
+- **Mô tả:** Lấy danh sách tất cả các banner (dành cho admin).
+- **Yêu cầu:** Xác thực JWT của admin.
+- **Success Response (200 OK):** Tương tự như `GET /banners/active`.
+
+### `GET /banners/{banner_id}`
+
+- **Mô tả:** Lấy thông tin chi tiết của một banner bằng ID.
+- **URL Params:** `banner_id` (UUID, required).
+- **Success Response (200 OK):**
+
+  ```json
+  {
+    "id": "banner-uuid",
+    "title": "Tiêu đề banner",
+    "image_url": "https://pub-xxxxxxxx.r2.dev/images/banners/a1b2c3d4-e5f6-7890-1234-567890abcdef.jpg",
+    "target_url": "https://example.com/promotion",
+    "is_active": true,
+    "created_at": "2025-09-07T10:00:00Z"
+  }
+  ```
+
+### `PATCH /banners/{banner_id}`
+
+- **Mô tả:** Cập nhật thông tin của một banner. Yêu cầu quyền admin.
+- **URL Params:** `banner_id` (UUID, required).
+- **Request Body:** (Các trường là tùy chọn)
+
+  ```json
+  {
+    "title": "Tiêu đề banner mới",
+    "is_active": false
+  }
+  ```
+
+- **Success Response (200 OK):** Trả về thông tin banner đã được cập nhật.
+
+### `DELETE /banners/{banner_id}`
+
+- **Mô tả:** Xóa một banner. Yêu cầu quyền admin.
+- **URL Params:** `banner_id` (UUID, required).
+- **Success Response (204 No Content):** Không có nội dung trả về.
