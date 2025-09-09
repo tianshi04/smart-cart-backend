@@ -27,6 +27,7 @@ Lưu trữ thông tin cơ bản về các sản phẩm.
 | :------------- | :------------- | :----- | :------------------------------------------ |
 | `id`           | UUID           | PK     | Khóa chính                                  |
 | `name`         | VARCHAR(255)   |        | Tên sản phẩm                                |
+| `barcode`      | VARCHAR(255)   | UNIQUE | Mã vạch sản phẩm (UPC, EAN, etc.)           |
 | `description`  | TEXT           |        | Mô tả chi tiết sản phẩm                     |
 | `price`        | DECIMAL(10, 2) |        | Giá bán                                     |
 | `weight_grams` | INTEGER        |        | Cân nặng sản phẩm (gram), dùng cho cảm biến |

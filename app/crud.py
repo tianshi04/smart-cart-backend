@@ -98,6 +98,10 @@ def register_new_user(session: Session, user_data: schemas.UserCreate):
 
 def create_product(session: Session, product_in: schemas.ProductCreate) -> Product:
     """Creates a new product and links it to specified categories."""
+    if product_in.barcode:
+        existing_product = get_product_by_barcode(session, product_in.barcode)
+        if existing_product:
+            raise ValueError(f"Product with barcode {product_in.barcode} already exists.")
     product_data = product_in.model_dump(exclude={"category_ids"})
     db_product = Product(**product_data)
 
@@ -343,6 +347,11 @@ def get_product_by_id(session: Session, product_id: UUID) -> Product | None:
     """Retrieves a product by its ID."""
     return session.get(Product, product_id)
 
+def get_product_by_barcode(session: Session, barcode: str) -> Product | None:
+    """Retrieves a product by its barcode."""
+    statement = select(Product).where(Product.barcode == barcode)
+    return session.exec(statement).first()
+
 def get_product_by_id_with_relations(session: Session, product_id: UUID) -> Product | None:
     """Retrieves a product by its ID, eagerly loading its images and categories."""
     statement = select(Product).where(Product.id == product_id).options(
@@ -353,6 +362,11 @@ def get_product_by_id_with_relations(session: Session, product_id: UUID) -> Prod
 
 def update_product(session: Session, db_product: Product, product_in: schemas.ProductUpdate) -> Product:
     """Updates an existing product and its category links."""
+    if product_in.barcode:
+        existing_product = get_product_by_barcode(session, product_in.barcode)
+        if existing_product and existing_product.id != db_product.id:
+            raise ValueError(f"Product with barcode {product_in.barcode} already exists.")
+
     update_data = product_in.model_dump(exclude_unset=True, exclude={"category_ids"})
     for field, value in update_data.items():
         setattr(db_product, field, value)

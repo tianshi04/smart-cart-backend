@@ -65,6 +65,7 @@ class Product(SQLModel, table=True):
 
     id: uuid.UUID | None = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(max_length=255)
+    barcode: str | None = Field(default=None, sa_column=Column("barcode", String, unique=True, index=True))
     description: str | None = Field(default=None, sa_column=Column(Text))
     price: Decimal = Field(decimal_places=2, max_digits=10)
     weight_grams: int

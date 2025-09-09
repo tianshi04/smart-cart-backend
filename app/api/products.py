@@ -25,13 +25,20 @@ async def create_product(
     """
     Creates a new product with basic information and links it to categories.
     """
-    db_product = crud.create_product(session=session, product_in=product_in)
+    try:
+        db_product = crud.create_product(session=session, product_in=product_in)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     
     # For the response, ensure primary_image is None as no image is uploaded yet
     # and categories are loaded.
     product_out = schemas.ProductOut(
         id=db_product.id,
         name=db_product.name,
+        barcode=db_product.barcode,
         description=db_product.description,
         price=db_product.price,
         weight_grams=db_product.weight_grams,
@@ -95,6 +102,45 @@ async def get_product_by_id(
     product_out = schemas.ProductOut(
         id=product.id,
         name=product.name,
+        barcode=product.barcode,
+        description=product.description,
+        price=product.price,
+        weight_grams=product.weight_grams,
+        created_at=product.created_at,
+        updated_at=product.updated_at,
+        categories=product.categories,
+        primary_image=primary_image
+    )
+    return product_out
+
+@router.get(
+    "/by-barcode/{barcode}",
+    response_model=schemas.ProductOut,
+    summary="Get product by barcode"
+)
+async def get_product_by_barcode(
+    barcode: str,
+    session: SessionDep,
+) -> schemas.ProductOut:
+    """
+    Retrieves a single product by its barcode, including its images and categories.
+    """
+    product = crud.get_product_by_barcode(session, barcode)
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Product not found."
+        )
+    
+    # Convert image_url to public URL for primary image
+    primary_image = next((img for img in product.images if img.is_primary), None)
+    if primary_image:
+        primary_image.image_url = r2_service.get_public_url(primary_image.image_url)
+
+    product_out = schemas.ProductOut(
+        id=product.id,
+        name=product.name,
+        barcode=product.barcode,
         description=product.description,
         price=product.price,
         weight_grams=product.weight_grams,
@@ -125,7 +171,13 @@ async def update_product(
             detail="Product not found."
         )
     
-    updated_product = crud.update_product(session=session, db_product=db_product, product_in=product_in)
+    try:
+        updated_product = crud.update_product(session=session, db_product=db_product, product_in=product_in)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
 
     # Convert image_url to public URL for primary image in response
     primary_image = next((img for img in updated_product.images if img.is_primary), None)
@@ -135,6 +187,7 @@ async def update_product(
     product_out = schemas.ProductOut(
         id=updated_product.id,
         name=updated_product.name,
+        barcode=updated_product.barcode,
         description=updated_product.description,
         price=updated_product.price,
         weight_grams=updated_product.weight_grams,
@@ -204,6 +257,7 @@ async def get_products(
             schemas.ProductOut(
                 id=product.id,
                 name=product.name,
+                barcode=product.barcode,
                 description=product.description,
                 price=product.price,
                 weight_grams=product.weight_grams,

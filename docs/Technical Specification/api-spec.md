@@ -258,6 +258,7 @@ Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các
   ```json
   {
     "name": "Tên sản phẩm mới",
+    "barcode": "8934567890123",
     "description": "Mô tả chi tiết về sản phẩm.",
     "price": 99.99,
     "weight_grams": 500,
@@ -271,6 +272,7 @@ Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các
   {
     "id": "uuid-san-pham-moi",
     "name": "Tên sản phẩm mới",
+    "barcode": "8934567890123",
     "description": "Mô tả chi tiết về sản phẩm.",
     "price": 99.99,
     "weight_grams": 500,
@@ -297,6 +299,7 @@ Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các
   {
     "id": "product-uuid",
     "name": "Tên sản phẩm",
+    "barcode": "8934567890123",
     "description": "Mô tả sản phẩm",
     "price": 50.00,
     "weight_grams": 1000,
@@ -318,6 +321,13 @@ Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các
   }
   ```
 
+### `GET /products/by-barcode/{barcode}`
+
+- **Mô tả:** Lấy thông tin chi tiết của một sản phẩm cụ thể bằng mã vạch của nó.
+- **URL Params:** `barcode` (string, required).
+- **Success Response (200 OK):** Cấu trúc response tương tự như `GET /products/{product_id}`.
+- **Error Response (404 Not Found):** Nếu không tìm thấy sản phẩm với mã vạch đã cho.
+
 ### `PATCH /products/{product_id}`
 
 - **Mô tả:** Cập nhật thông tin cơ bản và liên kết danh mục của một sản phẩm hiện có.
@@ -328,6 +338,7 @@ Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các
   {
     "name": "Tên sản phẩm đã cập nhật",
     "price": 120.00,
+    "barcode": "1234567890123",
     "category_ids": ["uuid-danh-muc-moi"]
   }
   ```
@@ -338,6 +349,7 @@ Các API sau đây là các endpoint RESTful tiêu chuẩn để quản lý các
   {
     "id": "product-uuid",
     "name": "Tên sản phẩm đã cập nhật",
+    "barcode": "1234567890123",
     "description": "Mô tả sản phẩm",
     "price": 120.00,
     "weight_grams": 1000,

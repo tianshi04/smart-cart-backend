@@ -206,6 +206,7 @@ class ProductImageCreate(BaseModel):
 class ProductCreate(BaseModel):
     """Schema for creating a new product."""
     name: str = Field(..., max_length=255)
+    barcode: str | None = Field(None, description="The barcode of the product (e.g., UPC, EAN).")
     description: str | None = None
     price: Decimal = Field(..., decimal_places=2, max_digits=10)
     weight_grams: int
@@ -214,6 +215,7 @@ class ProductCreate(BaseModel):
 class ProductUpdate(BaseModel):
     """Schema for updating an existing product."""
     name: str | None = Field(None, max_length=255)
+    barcode: str | None = Field(None, description="The new barcode of the product.")
     description: str | None = None
     price: Decimal | None = Field(None, decimal_places=2, max_digits=10)
     weight_grams: int | None = None
@@ -247,6 +249,7 @@ class ProductOut(BaseModel):
     """Schema for returning a product with its primary image and category."""
     id: UUID
     name: str
+    barcode: str | None
     description: str | None
     price: Decimal
     weight_grams: int # Added
